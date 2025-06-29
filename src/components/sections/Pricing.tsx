@@ -3,116 +3,160 @@ import { motion } from 'framer-motion';
 import { Check, Star, Crown, Zap, Heart } from 'lucide-react';
 import Button from '../ui/Button';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
-import { trackEventSecure } from '../../services/secureApi';
+import { redirectToCheckout } from '../../lib/stripe';
+import { stripeProducts } from '../../stripe-config';
+import { trackEventSecure } from '../../services/secureApi'; 
 
 const Pricing: React.FC = () => {
   const { elementRef, isIntersecting } = useIntersectionObserver();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const plans = [
-    {
-      id: 'basic',
-      name: 'Basic',
-      description: 'Perfect for getting started',
-      monthlyPrice: 0,
-      yearlyPrice: 0,
-      icon: Star,
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-50',
-      borderColor: 'border-gray-200',
-      popular: false,
-      features: [
-        'Create profile and browse members',
-        'Send up to 10 messages per day',
-        'Basic matching algorithm',
-        'Standard customer support',
-        'Mobile app access',
-      ],
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      description: 'Most popular choice',
-      monthlyPrice: 14.99,
-      yearlyPrice: 149.99,
-      icon: Crown,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      popular: true,
-      features: [
-        'Everything in Basic',
-        'Unlimited messaging',
-        'Advanced matching with cultural preferences',
-        'Video chat and virtual dates',
-        'Real-time translation',
-        'AI-powered compatibility scoring',
-        'Gift messaging points to Basic members (20 points/week)',
-        'Connect with up to 4 Basic members weekly via gifts',
-        'Priority customer support',
-        'See who viewed your profile',
-        'Advanced privacy controls',
-      ],
-    },
-    {
-      id: 'platinum',
-      name: 'Platinum',
-      description: 'For serious relationship seekers',
-      monthlyPrice: 29.99,
-      yearlyPrice: 299.99,
-      icon: Zap,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200',
-      popular: false,
-      features: [
-        'Everything in Premium',
-        'Profile boost (3x more visibility)',
-        'Exclusive access to verified members',
-        'Advanced AI compatibility insights',
-        'Personal relationship coach',
-        'Cultural exchange workshops',
-        'VIP customer support',
-        'Advanced compatibility reports',
-        'Travel planning assistance',
-        'Success story features',
-      ],
-    },
+  // Basic plan (free tier)
+  const basicPlan = {
+    id: 'basic',
+    name: 'Basic',
+    description: 'Perfect for getting started',
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    icon: Star,
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-50',
+    borderColor: 'border-gray-200',
+    popular: false,
+    features: [
+      'Create profile and browse members',
+      'Send up to 10 messages per day',
+      'Basic matching algorithm',
+      'Standard customer support',
+      'Mobile app access',
+    ],
+  };
+
+  // Get monthly and yearly plans from stripe-config
+  const monthlyPlans = stripeProducts
+    .filter(product => !product.name.includes('Annually'))
+    .map(product => {
+      const price = parseFloat(product.description.match(/\$(\d+\.\d+)/)?.[1] || '0');
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.name === 'Premium' ? 'Most popular choice' : 'For serious relationship seekers',
+        monthlyPrice: price,
+        yearlyPrice: 0, // Not used for monthly plans
+        priceId: product.priceId,
+        icon: product.name === 'Premium' ? Crown : Zap,
+        color: product.name === 'Premium' ? 'text-blue-600' : 'text-purple-600',
+        bgColor: product.name === 'Premium' ? 'bg-blue-50' : 'bg-purple-50',
+        borderColor: product.name === 'Premium' ? 'border-blue-200' : 'border-purple-200',
+        popular: product.name === 'Premium',
+        features: product.name === 'Premium' 
+          ? [
+              'Everything in Basic',
+              'Unlimited messaging',
+              'Advanced matching with cultural preferences',
+              'Video chat and virtual dates',
+              'Real-time translation',
+              'AI-powered compatibility scoring',
+              'Gift messaging points to Basic members (20 points/week)',
+              'Connect with up to 4 Basic members weekly via gifts',
+              'Priority customer support',
+              'See who viewed your profile',
+              'Advanced privacy controls',
+            ]
+          : [
+              'Everything in Premium',
+              'Profile boost (3x more visibility)',
+              'Exclusive access to verified members',
+              'Advanced AI compatibility insights',
+              'Personal relationship coach',
+              'Cultural exchange workshops',
+              'VIP customer support',
+              'Advanced compatibility reports',
+              'Travel planning assistance',
+            ]
+      };
+    });
+
+  const yearlyPlans = stripeProducts
+    .filter(product => product.name.includes('Annually'))
+    .map(product => {
+      const price = parseFloat(product.description.match(/\$(\d+\.\d+)/)?.[1] || '0');
+      const monthlyEquivalent = parseFloat(product.description.match(/\$(\d+\.\d+)\/month/)?.[1] || '0');
+      return {
+        id: product.id,
+        name: product.name.replace(' Annually', ''),
+        description: product.name.includes('Premium') ? 'Most popular choice' : 'For serious relationship seekers',
+        monthlyPrice: 0, // Not used for yearly plans
+        yearlyPrice: price,
+        monthlyEquivalent,
+        priceId: product.priceId,
+        icon: product.name.includes('Premium') ? Crown : Zap,
+        color: product.name.includes('Premium') ? 'text-blue-600' : 'text-purple-600',
+        bgColor: product.name.includes('Premium') ? 'bg-blue-50' : 'bg-purple-50',
+        borderColor: product.name.includes('Premium') ? 'border-blue-200' : 'border-purple-200',
+        popular: product.name.includes('Premium'),
+        features: product.name.includes('Premium')
+          ? [
+              'Everything in Basic',
+              'Unlimited messaging',
+              'Advanced matching with cultural preferences',
+              'Video chat and virtual dates',
+              'Real-time translation',
+              'AI-powered compatibility scoring',
+              'Gift messaging points to Basic members (20 points/week)',
+              'Connect with up to 4 Basic members weekly via gifts',
+              'Priority customer support',
+              'See who viewed your profile',
+              'Advanced privacy controls',
+            ]
+          : [
+              'Everything in Premium',
+              'Profile boost (3x more visibility)',
+              'Exclusive access to verified members',
+              'Advanced AI compatibility insights',
+              'Personal relationship coach',
+              'Cultural exchange workshops',
+              'VIP customer support',
+              'Advanced compatibility reports',
+              'Travel planning assistance',
+            ]
+      };
+    });
+
+  // Combine plans based on billing cycle
+  const plans = [
+    basicPlan,
+    ...(billingCycle === 'monthly' ? monthlyPlans : yearlyPlans)
   ];
 
-  const handlePlanSelect = (planId: string, planName: string) => {
+  const handlePlanSelect = async (planId: string, planName: string, priceId?: string) => {
     trackEventSecure('pricing_plan_selected', { 
       plan: planId, 
       billing_cycle: billingCycle,
       plan_name: planName 
     });
     
-    // Simulate navigation to signup page with plan details
-    const queryParams = new URLSearchParams({
-      plan: planId,
-      billing: billingCycle,
-      planName: planName
-    });
-    
-    const signupUrl = `/signup?${queryParams.toString()}`;
-    console.log(`Navigating to signup: ${signupUrl}`);
-    
-    // In a real application, you would use React Router or Next.js router
-    // For demo purposes, we'll show what would happen
-    const confirmed = confirm(
-      `Ready to join with the ${planName} plan (${billingCycle} billing)?\n\n` +
-      `This would redirect you to: ${signupUrl}\n\n` +
-      `Click OK to simulate the signup process.`
-    );
-    
-    if (confirmed) {
-      // Simulate the navigation
-      console.log('Redirecting to signup page...');
-      alert(`🚀 Welcome! You've selected the ${planName} plan with ${billingCycle} billing. In a real app, you'd now be on the signup page!`);
-      
-      // In production, you would do:
-      // window.location.href = signupUrl;
-      // or with React Router: navigate(signupUrl);
+    // If it's the free basic plan, just show a message
+    if (planId === 'basic') {
+      alert('🎉 Welcome to PinoyWest! Your free Basic plan is ready to use!');
+      return;
+    }
+
+    if (!priceId) {
+      alert('Invalid product selected. Please try again.');
+      return;
+    }
+
+    try {
+      setIsLoading(planId);
+      await redirectToCheckout(priceId);
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      alert('There was an error processing your request. Please try again.');
+    } finally {
+      setIsLoading(null);
     }
   };
 
@@ -249,7 +293,8 @@ const Pricing: React.FC = () => {
                   variant={plan.popular ? 'primary' : 'outline'}
                   size="lg"
                   className="w-full"
-                  onClick={() => handlePlanSelect(plan.id, plan.name)}
+                  onClick={() => handlePlanSelect(plan.id, plan.name, plan.priceId)}
+                  loading={isLoading === plan.id}
                 >
                   {plan.monthlyPrice === 0 ? 'Get Started Free' : 'Choose Plan'}
                 </Button>
