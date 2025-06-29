@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  CreditCard, Calendar, DollarSign, AlertCircle, 
+  CreditCard, Calendar, DollarSign, AlertTriangle, 
   CheckCircle, Download, RefreshCw, Settings, Crown
 } from 'lucide-react';
 import Button from '../ui/Button';
-import { useSubscription } from '../../hooks/useSubscription';
-import { Subscription, Invoice, PaymentMethod } from '../../types/payments';
+import { getUserSubscription, formatCurrency, getSubscriptionStatus, getProductNameFromPriceId } from '../../lib/stripe';
 import PaymentMethodCard from './PaymentMethodCard';
 import InvoiceHistory from './InvoiceHistory';
 
@@ -15,7 +14,7 @@ interface SubscriptionManagerProps {
 }
 
 const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ userId }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'billing' | 'invoices'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'billing'>('overview');
   
   const {
     subscription,
@@ -29,7 +28,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ userId }) => 
     setDefaultPaymentMethod,
     downloadInvoice,
     retryPayment
-  } = useSubscription(userId);
+  } = useSubscriptionHook(userId);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -71,6 +70,168 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ userId }) => 
     }
   };
 
+  // Custom hook to simulate subscription data
+  function useSubscriptionHook(userId: string) {
+    const [subscription, setSubscription] = useState<any | null>(null);
+    const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+    const [invoices, setInvoices] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+      const fetchSubscription = async () => {
+        setIsLoading(true);
+        try {
+          const subData = await getUserSubscription();
+          
+          if (subData) {
+            // Transform the data to match the expected format
+            setSubscription({
+              id: subData.subscription_id || 'sub_demo',
+              customerId: subData.customer_id,
+              plan: {
+                id: subData.price_id || 'price_demo',
+                name: getProductNameFromPriceId(subData.price_id || '') || 'Premium',
+                description: 'Full access to all features',
+                price: 14.99,
+                interval: 'month',
+                features: [
+                  'Unlimited messaging',
+                  'Video calls',
+                  'Advanced matching',
+                  'Profile boost',
+                  'Read receipts',
+                  'Priority support'
+                ]
+              },
+              status: subData.subscription_status || 'active',
+              currentPeriodStart: subData.current_period_start 
+                ? new Date(subData.current_period_start * 1000).toISOString() 
+                : new Date().toISOString(),
+              currentPeriodEnd: subData.current_period_end 
+                ? new Date(subData.current_period_end * 1000).toISOString() 
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              created: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+              cancelAtPeriodEnd: subData.cancel_at_period_end || false
+            });
+
+            // Add payment method if available
+            if (subData.payment_method_brand && subData.payment_method_last4) {
+              setPaymentMethods([{
+                id: 'pm_demo',
+                type: 'card',
+                brand: subData.payment_method_brand,
+                last4: subData.payment_method_last4,
+                expMonth: 12,
+                expYear: 2025,
+                isDefault: true,
+                created: new Date().toISOString()
+              }]);
+            } else {
+              // Mock payment methods
+              setPaymentMethods([
+                {
+                  id: 'pm_1234567890',
+                  type: 'card',
+                  brand: 'visa',
+                  last4: '4242',
+                  expMonth: 12,
+                  expYear: 2025,
+                  isDefault: true,
+                  created: new Date().toISOString()
+                }
+              ]);
+            }
+          } else {
+            // No subscription found, use mock data for demo
+            setSubscription(null);
+            setPaymentMethods([]);
+          }
+
+          // Mock invoices for demo
+          setInvoices([
+            {
+              id: 'in_1234567890',
+              number: 'INV-2024-001',
+              amount: 2999,
+              currency: 'usd',
+              status: 'paid',
+              date: new Date().toISOString(),
+              description: 'Premium Plan - Monthly',
+              url: '#',
+              pdfUrl: '#'
+            },
+            {
+              id: 'in_0987654321',
+              number: 'INV-2024-002',
+              amount: 2999,
+              currency: 'usd',
+              status: 'pending',
+              date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+              description: 'Premium Plan - Monthly',
+              url: '#',
+              pdfUrl: '#'
+            }
+          ]);
+        } catch (err) {
+          console.error('Error fetching subscription:', err);
+          setError('Failed to load subscription data');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchSubscription();
+    }, [userId]);
+
+    // Mock functions
+    const updateSubscription = async () => {
+      alert('This would update your subscription in a real application.');
+      return true;
+    };
+
+    const cancelSubscription = async () => {
+      alert('This would cancel your subscription in a real application.');
+      return true;
+    };
+
+    const addPaymentMethod = async () => {
+      alert('This would add a new payment method in a real application.');
+    };
+
+    const removePaymentMethod = async () => {
+      alert('This would remove the payment method in a real application.');
+    };
+
+    const setDefaultPaymentMethod = async () => {
+      alert('This would set the default payment method in a real application.');
+    };
+
+    const downloadInvoice = async () => {
+      alert('This would download the invoice in a real application.');
+    };
+
+    const retryPayment = async () => {
+      alert('This would retry the payment in a real application.');
+    };
+
+    return {
+      subscription,
+      paymentMethods,
+      invoices,
+      isLoading,
+      error,
+      updateSubscription,
+      cancelSubscription,
+      addPaymentMethod,
+      removePaymentMethod,
+      setDefaultPaymentMethod,
+      downloadInvoice,
+      retryPayment,
+      refreshData: () => {}
+    };
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -91,8 +252,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ userId }) => 
       <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-8">
         {[
           { key: 'overview', label: 'Overview', icon: Crown },
-          { key: 'billing', label: 'Billing', icon: CreditCard },
-          { key: 'invoices', label: 'Invoices', icon: Download }
+          { key: 'billing', label: 'Billing', icon: CreditCard }
         ].map((tab) => (
           <button
             key={tab.key}
@@ -121,7 +281,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ userId }) => 
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Current Plan</h2>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(subscription.status)}`}>
-                {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                {subscription?.status ? subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1) : 'No Subscription'}
               </span>
             </div>
 
@@ -138,7 +298,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ userId }) => 
                 <h4 className="font-medium text-gray-700 mb-2">Next Billing Date</h4>
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-900">{formatDate(subscription.currentPeriodEnd)}</span>
+                  <span className="text-gray-900">{formatDate(subscription?.currentPeriodEnd)}</span>
                 </div>
               </div>
 
@@ -225,7 +385,7 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ userId }) => 
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Payment Methods</h2>
               <Button
-                onClick={() => addPaymentMethod()}
+                onClick={addPaymentMethod}
                 size="sm"
               >
                 Add Payment Method
@@ -312,20 +472,6 @@ const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ userId }) => 
               </Button>
             </div>
           </div>
-        </motion.div>
-      )}
-
-      {/* Invoices Tab */}
-      {activeTab === 'invoices' && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <InvoiceHistory
-            invoices={invoices}
-            onDownload={downloadInvoice}
-            onRetryPayment={retryPayment}
-          />
         </motion.div>
       )}
     </div>

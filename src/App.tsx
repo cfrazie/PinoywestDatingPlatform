@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -16,6 +17,8 @@ import CulturalProfilesDemo from './components/cultural/CulturalProfilesDemo';
 import CulturalCalendar from './components/cultural/CulturalCalendar';
 import ImagePerformanceMonitor from './components/performance/ImagePerformanceMonitor';
 import SecurityMonitor from './components/security/SecurityMonitor';
+import CheckoutSuccess from './pages/CheckoutSuccess';
+import CheckoutCanceled from './pages/CheckoutCanceled';
 import AdminRoute from './components/admin/AdminRoute';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
 import { validateEnvironment } from './lib/security';
@@ -95,59 +98,70 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Toast notifications */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
-            duration: 3000,
-            iconTheme: {
-              primary: '#10B981',
-              secondary: '#fff',
-            },
-          },
-          error: {
+    <Router>
+      <div className="min-h-screen bg-white">
+        {/* Toast notifications */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
             duration: 4000,
-            iconTheme: {
-              primary: '#EF4444',
-              secondary: '#fff',
+            style: {
+              background: '#363636',
+              color: '#fff',
             },
-          },
-        }}
-      />
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#10B981',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              duration: 4000,
+              iconTheme: {
+                primary: '#EF4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
 
-      {/* Header */}
-      <Header />
+        <Routes>
+          <Route path="/checkout/success" element={<CheckoutSuccess />} />
+          <Route path="/checkout/canceled" element={<CheckoutCanceled />} />
+          <Route path="/admin" element={<AdminRoute />} />
+          <Route path="/" element={
+            <>
+              {/* Header */}
+              <Header />
 
-      {/* Main content */}
-      <main>
-        <Hero />
-        <Features />
-        <Testimonials />
-        <MessagingDemo />
-        <VideoCallDemo />
-        <PaymentDemo />
-        <AdvancedSearchDemo />
-        <CulturalProfilesDemo />
-        <CulturalCalendar />
-        <Pricing />
-        <Newsletter />
-        <Contact />
-      </main>
+              {/* Main content */}
+              <main>
+                <Hero />
+                <Features />
+                <Testimonials />
+                <MessagingDemo />
+                <VideoCallDemo />
+                <PaymentDemo />
+                <AdvancedSearchDemo />
+                <CulturalProfilesDemo />
+                <CulturalCalendar />
+                <Pricing />
+                <Newsletter />
+                <Contact />
+              </main>
 
-      {/* Footer */}
-      <Footer />
+              {/* Footer */}
+              <Footer />
 
-      {/* Development tools */}
-      <ImagePerformanceMonitor />
-      <SecurityMonitor />
-    </div>
+              {/* Development tools */}
+              <ImagePerformanceMonitor />
+              <SecurityMonitor />
+            </>
+          } />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

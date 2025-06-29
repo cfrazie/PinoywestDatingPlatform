@@ -1,12 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   children: React.ReactNode;
+  component?: React.ElementType;
+  to?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -16,6 +19,8 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   children,
   className = '',
+  component,
+  to,
   ...props
 }) => {
   const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
@@ -34,6 +39,23 @@ const Button: React.FC<ButtonProps> = ({
   };
   
   const isDisabled = disabled || loading;
+  
+  // If component prop is provided, render that component instead of a button
+  if (component) {
+    const Component = component;
+    return (
+      <Component
+        to={to}
+        className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
+          isDisabled ? 'opacity-50 cursor-not-allowed' : ''
+        } ${className}`}
+        {...props}
+      >
+        {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+        {children}
+      </Component>
+    );
+  }
   
   return (
     <motion.button
