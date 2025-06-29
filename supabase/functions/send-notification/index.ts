@@ -6,6 +6,9 @@ import { Expo } from 'npm:expo-server-sdk@3.7.0';
 import { initializeApp, cert, getApps, App } from 'npm:firebase-admin/app';
 import { getMessaging } from 'npm:firebase-admin/messaging';
 import * as Mustache from 'npm:mustache@4.2.0';
+import { initializeApp, cert, getApps, App } from 'npm:firebase-admin/app';
+import { getMessaging } from 'npm:firebase-admin/messaging';
+import * as Mustache from 'npm:mustache@4.2.0';
 
 // Initialize Supabase client
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -18,6 +21,35 @@ sgMail.setApiKey(sendgridApiKey);
 
 // Initialize Expo client for push notifications
 const expo = new Expo();
+
+// Initialize Firebase Admin SDK for FCM
+let firebaseApp: App | null = null;
+
+try {
+  // Check if Firebase Admin is already initialized
+  if (getApps().length === 0) {
+    // Get service account key from environment
+    const serviceAccountKey = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
+    
+    if (serviceAccountKey) {
+      // Parse service account key JSON
+      const serviceAccount = JSON.parse(serviceAccountKey);
+      
+      // Initialize Firebase Admin SDK
+      firebaseApp = initializeApp({
+        credential: cert(serviceAccount)
+      });
+      
+      console.log('Firebase Admin SDK initialized successfully');
+    } else {
+      console.warn('Firebase service account key not found in environment');
+    }
+  } else {
+    firebaseApp = getApps()[0];
+  }
+} catch (error) {
+  console.error('Error initializing Firebase Admin SDK:', error);
+}
 
 // Initialize Firebase Admin SDK for FCM
 let firebaseApp: App | null = null;
@@ -358,6 +390,26 @@ async function sendPushNotification(notification: any) {
     if (firebaseApp && messages.length > 0) {
       try {
         const messaging = getMessaging(firebaseApp);
+        
+        // Send messages in batches of 500 (FCM limit)
+        const batchSize = 500;
+        for (let i = 0; i < messages.length; i += batchSize) {
+          const batch = messages.slice(i, i + batchSize);
+          const response = await messaging.sendAll(batch);
+          console.log(`Sent ${response.successCount} FCM messages successfully`);
+          
+          if (response.failureCount > 0) {
+            console.error('FCM send failures:', response.responses.filter(r => !r.success));
+          }
+        }
+      } catch (error) {
+        console.error('Error sending FCM notifications:', error);
+        return {
+          success: false,
+          externalId: null,
+          error: error.message
+        };
+      }
         
         // Send messages in batches of 500 (FCM limit)
         const batchSize = 500;

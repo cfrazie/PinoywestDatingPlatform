@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   MessageCircle, Heart, Shield, Bell, Key,

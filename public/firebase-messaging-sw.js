@@ -1,29 +1,66 @@
 // Firebase Cloud Messaging Service Worker
 
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js');
 
 // Store Firebase config
 let firebaseConfig = null;
+let firebaseInitialized = false;
 
 // Listen for messages from the main thread
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'FIREBASE_CONFIG') {
     firebaseConfig = event.data.config;
+    console.log('Received Firebase config in service worker');
     
-    // Initialize Firebase with the received config
-    firebase.initializeApp(firebaseConfig);
-    
-    // Get Firebase Messaging instance
-    const messaging = firebase.messaging();
-    
-    // Set up background message handler
-    setupBackgroundMessageHandler(messaging);
+    // Initialize Firebase if not already initialized
+    if (!firebaseInitialized) {
+      try {
+        firebase.initializeApp(firebaseConfig);
+        firebaseInitialized = true;
+        console.log('Firebase initialized in service worker');
+        
+        // Get Firebase Messaging instance
+        const messaging = firebase.messaging();
+        
+        // Set up background message handler
+        setupBackgroundMessageHandler(messaging);
+        
+        // Acknowledge receipt of config
+        if (event.ports && event.ports[0]) {
+          event.ports[0].postMessage({ type: 'FIREBASE_CONFIG_RECEIVED' });
+        }
+      } catch (error) {
+        console.error('Failed to initialize Firebase in service worker:', error);
+      }
+    }
   }
 });
+    
+// Initialize with default config if available from environment (fallback)
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      // If Firebase wasn't initialized via message, try with self variables
+      if (!firebaseInitialized && self.FIREBASE_CONFIG) {
+        try {
+          const config = JSON.parse(self.FIREBASE_CONFIG);
+          firebase.initializeApp(config);
+          firebaseInitialized = true;
+          console.log('Firebase initialized in service worker from self variables');
+          
+          const messaging = firebase.messaging();
+          setupBackgroundMessageHandler(messaging);
+        } catch (error) {
+          console.error('Failed to initialize Firebase from self variables:', error);
+        }
+      }
+    })()
+  );
+});
 
-// Initialize with default config if available from environment
-if (!firebaseConfig && self.firebase) {
+// Fallback initialization if needed
+if (!firebaseInitialized && self.firebase) {
   try {
     // Fallback initialization with environment variables
     // This is a backup in case the message-based approach fails
@@ -38,6 +75,7 @@ if (!firebaseConfig && self.firebase) {
     });
     
     const messaging = firebase.messaging();
+    firebaseInitialized = true;
     setupBackgroundMessageHandler(messaging);
   } catch (error) {
     console.error('Failed to initialize Firebase in service worker:', error);
@@ -47,7 +85,7 @@ if (!firebaseConfig && self.firebase) {
 // Function to set up background message handler
 function setupBackgroundMessageHandler(messaging) {
   messaging.onBackgroundMessage((payload) => {
-    console.log('Received background message:', payload);
+    console.log('[Firebase] Received background message:', payload);
 
     // Customize notification here
     const notificationTitle = payload.notification.title;
@@ -72,6 +110,7 @@ function setupBackgroundMessageHandler(messaging) {
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
+  const action = event.action;
   
   event.notification.close();
   
@@ -88,15 +127,23 @@ self.addEventListener('notificationclick', (event) => {
       // Determine target URL based on notification type
       let targetUrl = '/';
       
-      if (notificationData) {
-        if (notificationData.type === 'new_message') {
+      if (notificationData && notificationData.type) {
+        const type = notificationData.type;
+        
+        if (type === 'new_message') {
           targetUrl = `/messages/${notificationData.senderId}`;
-        } else if (notificationData.type === 'new_match') {
+        } else if (type === 'new_match') {
           targetUrl = `/matches/${notificationData.matchId}`;
-        } else if (notificationData.type === 'verification_complete') {
+        } else if (type === 'verification_complete') {
           targetUrl = `/verification/${notificationData.reportId}`;
-        } else if (notificationData.type === 'video_call_invitation') {
+        } else if (type === 'video_call_invitation') {
           targetUrl = `/calls/${notificationData.callId}`;
+        }
+      } else if (action === 'view' && event.notification.data) {
+        // Handle action-specific navigation
+        const actionData = event.notification.data;
+        if (actionData.url) {
+          targetUrl = actionData.url;
         }
       }
       
@@ -113,4 +160,32 @@ self.addEventListener('notificationclick', (event) => {
       }
     })
   );
+});
+
+// Handle push event directly
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  
+  try {
+    const data = event.data.json();
+    console.log('[Service Worker] Push received:', data);
+    
+    // If we have notification data in the push message
+    if (data.notification) {
+      const notificationTitle = data.notification.title || 'New Notification';
+      const notificationOptions = {
+        body: data.notification.body || '',
+        icon: data.notification.icon || '/vite.svg',
+        badge: data.notification.badge || '/vite.svg',
+        data: data.data || {},
+        tag: data.data?.notificationId || 'default'
+      };
+      
+      event.waitUntil(
+        self.registration.showNotification(notificationTitle, notificationOptions)
+      );
+    }
+  } catch (error) {
+    console.error('[Service Worker] Error handling push event:', error);
+  }
 });
