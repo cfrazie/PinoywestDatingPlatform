@@ -410,26 +410,6 @@ async function sendPushNotification(notification: any) {
           error: error.message
         };
       }
-        
-        // Send messages in batches of 500 (FCM limit)
-        const batchSize = 500;
-        for (let i = 0; i < messages.length; i += batchSize) {
-          const batch = messages.slice(i, i + batchSize);
-          const response = await messaging.sendAll(batch);
-          console.log(`Sent ${response.successCount} FCM messages successfully`);
-          
-          if (response.failureCount > 0) {
-            console.error('FCM send failures:', response.responses.filter(r => !r.success));
-          }
-        }
-      } catch (error) {
-        console.error('Error sending FCM notifications:', error);
-        return {
-          success: false,
-          externalId: null,
-          error: error.message
-        };
-      }
     } else {
       console.log('Firebase Admin SDK not available, simulating FCM send');
       // Simulate success for demo purposes
