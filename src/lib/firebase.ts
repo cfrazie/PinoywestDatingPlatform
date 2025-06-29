@@ -27,6 +27,27 @@ if (isBrowser) {
     // Initialize Firebase Cloud Messaging
     if ('serviceWorker' in navigator) {
       messaging = getMessaging(firebaseApp);
+      
+      // Register service worker with dynamic configuration
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Service worker registered:', registration);
+          
+          // Pass Firebase config to service worker
+          navigator.serviceWorker.ready.then((serviceWorkerRegistration) => {
+            // Create a message channel
+            const messageChannel = new MessageChannel();
+            
+            // Send Firebase config to the service worker
+            serviceWorkerRegistration.active.postMessage({
+              type: 'FIREBASE_CONFIG',
+              config: firebaseConfig
+            }, [messageChannel.port2]);
+          });
+        })
+        .catch((error) => {
+          console.error('Service worker registration failed:', error);
+        });
     }
   } catch (error) {
     console.error('Firebase initialization error:', error);
