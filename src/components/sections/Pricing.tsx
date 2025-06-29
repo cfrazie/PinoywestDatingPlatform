@@ -279,12 +279,17 @@ const Pricing: React.FC = () => {
 
                 {/* Features */}
                 <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, index) => (
+                  {plan.features.slice(0, 4).map((feature, index) => (
                     <li key={index} className="flex items-start">
                       <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                       <span className="text-gray-700">{feature}</span>
                     </li>
                   ))}
+                  {plan.features.length > 4 && (
+                    <li className="text-sm text-gray-500">
+                      +{plan.features.length - 4} more features
+                    </li>
+                  )}
                 </ul>
 
                 {/* CTA button */}

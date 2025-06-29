@@ -146,3 +146,35 @@ export function getProductNameFromPriceId(priceId: string) {
   const product = stripeProducts.find(p => p.priceId === priceId);
   return product ? product.name : 'Unknown Product';
 }
+
+// Get deployment status
+export async function getDeploymentStatus(deployId?: string) {
+  try {
+    if (!supabase) {
+      return null;
+    }
+
+    let query = supabase
+      .from('deployment_status')
+      .select('*');
+
+    if (deployId) {
+      query = query.eq('deploy_id', deployId);
+    } else {
+      // Get the most recent deployment
+      query = query.order('created_at', { ascending: false }).limit(1);
+    }
+
+    const { data, error } = await query.single();
+
+    if (error) {
+      console.error('Error fetching deployment status:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in getDeploymentStatus:', error);
+    return null;
+  }
+}
