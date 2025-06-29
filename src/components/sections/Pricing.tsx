@@ -12,7 +12,6 @@ const Pricing: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
-  const plans = [
   // Basic plan (free tier)
   const basicPlan = {
     id: 'basic',
