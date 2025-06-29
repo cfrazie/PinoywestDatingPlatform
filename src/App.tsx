@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { NotificationProvider } from './components/notifications/NotificationProvider';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Hero from './components/sections/Hero';
@@ -21,6 +22,12 @@ import AdminRoute from './components/admin/AdminRoute';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
 import { validateEnvironment } from './lib/security';
 import { usePreloadCriticalImages } from './hooks/useImagePreloader';
+
+// Get authenticated user ID (in a real app, this would come from auth)
+const getCurrentUserId = () => {
+  // For demo purposes, return a fixed ID
+  return 'demo_user';
+};
 
 // Add custom CSS for animations
 const customStyles = `
@@ -62,6 +69,9 @@ const customStyles = `
 function App() {
   // Preload critical images
   usePreloadCriticalImages();
+
+  // Get current user ID
+  const userId = getCurrentUserId();
   
   // Check if we're on admin route
   const isAdminRoute = window.location.pathname === '/admin' || window.location.hash === '#admin';
@@ -96,7 +106,8 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <NotificationProvider userId={userId}>
+      <div className="min-h-screen bg-white">
       {/* Toast notifications */}
       <Toaster
         position="top-right"
@@ -149,7 +160,8 @@ function App() {
       {/* Development tools */}
       <ImagePerformanceMonitor />
       <SecurityMonitor />
-    </div>
+      </div>
+    </NotificationProvider>
   );
 }
 

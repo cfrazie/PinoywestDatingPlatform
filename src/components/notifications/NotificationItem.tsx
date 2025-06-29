@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  MessageCircle, Heart, Shield, Bell, 
-  User, Star, Video, Calendar, CreditCard,
+  MessageCircle, Heart, Shield, Bell, Key,
+  User, Star, Video, Calendar, CreditCard, 
   Check, MoreVertical, Trash2, Clock
 } from 'lucide-react';
 import { Notification } from '../../hooks/useNotifications';

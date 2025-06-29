@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, MessageCircle, Heart, Shield, 
-  X, ArrowRight, Star, Video
+  X, ArrowRight, Star, Video, User, Key
 } from 'lucide-react';
 import { Notification } from '../../hooks/useNotifications';
 

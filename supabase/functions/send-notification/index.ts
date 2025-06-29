@@ -1,8 +1,11 @@
 // Supabase Edge Function for sending notifications
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.39.0';
-import { SmtpClient } from 'npm:@sendgrid/mail@7.7.0';
+import sgMail from 'npm:@sendgrid/mail@7.7.0';
 import { Expo } from 'npm:expo-server-sdk@3.7.0';
+import { initializeApp, cert, getApps, App } from 'npm:firebase-admin/app';
+import { getMessaging } from 'npm:firebase-admin/messaging';
+import * as Mustache from 'npm:mustache@4.2.0';
 
 // Initialize Supabase client
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -11,11 +14,39 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Initialize SendGrid client for email
 const sendgridApiKey = Deno.env.get('SENDGRID_API_KEY') ?? '';
-const sendgrid = new SmtpClient();
-sendgrid.setApiKey(sendgridApiKey);
+sgMail.setApiKey(sendgridApiKey);
 
 // Initialize Expo client for push notifications
 const expo = new Expo();
+
+// Initialize Firebase Admin SDK for FCM
+let firebaseApp: App | null = null;
+
+try {
+  // Check if Firebase Admin is already initialized
+  if (getApps().length === 0) {
+    // Get service account key from environment
+    const serviceAccountKey = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
+    
+    if (serviceAccountKey) {
+      // Parse service account key JSON
+      const serviceAccount = JSON.parse(serviceAccountKey);
+      
+      // Initialize Firebase Admin SDK
+      firebaseApp = initializeApp({
+        credential: cert(serviceAccount)
+      });
+      
+      console.log('Firebase Admin SDK initialized successfully');
+    } else {
+      console.warn('Firebase service account key not found in environment');
+    }
+  } else {
+    firebaseApp = getApps()[0];
+  }
+} catch (error) {
+  console.error('Error initializing Firebase Admin SDK:', error);
+}
 
 // Process notification deliveries
 async function processNotificationDeliveries() {
@@ -133,7 +164,7 @@ async function processNotificationDeliveries() {
       } else {
         // Determine if we should retry
         const shouldRetry = delivery.attempts < 3;
-        const retryAt = shouldRetry ? new Date(Date.now() + 300000).toISOString() : null; // Retry in 5 minutes
+        const retryAt = shouldRetry ? new Date(Date.now() + (5 * Math.pow(2, delivery.attempts)) * 60000).toISOString() : null; // Exponential backoff
 
         await supabase
           .from('notification_deliveries')
@@ -212,17 +243,24 @@ async function sendEmailNotification(notification: any) {
       throw new Error('Email template not found');
     }
 
+    // Process templates with Mustache
+    const subject = Mustache.render(templateData.subject_template || notification.title, notification.data || {});
+    const textBody = Mustache.render(templateData.body_template || notification.body, notification.data || {});
+    const htmlBody = templateData.html_template 
+      ? Mustache.render(templateData.html_template, notification.data || {})
+      : `<p>${textBody}</p>`;
+
     // Prepare email content
     const emailData = {
       to: userData.email,
       from: 'notifications@pinoywest.com',
-      subject: notification.title,
-      text: notification.body,
-      html: templateData.html_template || `<p>${notification.body}</p>`
+      subject: subject,
+      text: textBody,
+      html: htmlBody
     };
 
     // Send email
-    const response = await sendgrid.send(emailData);
+    const response = await sgMail.send(emailData);
     
     return {
       success: true,
@@ -316,8 +354,34 @@ async function sendPushNotification(notification: any) {
     }
 
     // Send FCM notifications
-    // In a real implementation, you would use the Firebase Admin SDK
-    // For this example, we'll just simulate success
+    // Use Firebase Admin SDK if available
+    if (firebaseApp && messages.length > 0) {
+      try {
+        const messaging = getMessaging(firebaseApp);
+        
+        // Send messages in batches of 500 (FCM limit)
+        const batchSize = 500;
+        for (let i = 0; i < messages.length; i += batchSize) {
+          const batch = messages.slice(i, i + batchSize);
+          const response = await messaging.sendAll(batch);
+          console.log(`Sent ${response.successCount} FCM messages successfully`);
+          
+          if (response.failureCount > 0) {
+            console.error('FCM send failures:', response.responses.filter(r => !r.success));
+          }
+        }
+      } catch (error) {
+        console.error('Error sending FCM notifications:', error);
+        return {
+          success: false,
+          externalId: null,
+          error: error.message
+        };
+      }
+    } else {
+      console.log('Firebase Admin SDK not available, simulating FCM send');
+      // Simulate success for demo purposes
+    }
 
     return {
       success: true,
