@@ -24,7 +24,7 @@ import AdminForgotPassword from './pages/admin/AdminForgotPassword';
 import AdminTwoFactorSetup from './pages/admin/AdminTwoFactorSetup';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCanceled from './pages/CheckoutCanceled';
-import AdminRoute from './components/admin/AdminRoute';
+// import AdminRoute from './components/admin/AdminRoute';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
 import { validateEnvironment } from './lib/security';
 import { usePreloadCriticalImages } from './hooks/useImagePreloader';
@@ -71,11 +71,17 @@ function App() {
   usePreloadCriticalImages();
   
   // Check if we're on admin route
-  const isAdminRoute = window.location.pathname === '/admin' || window.location.hash === '#admin';
+  const isAdminRoute = window.location.pathname.startsWith('/admin') && 
+                      !window.location.pathname.startsWith('/admin/login') &&
+                      !window.location.pathname.startsWith('/admin/dashboard') &&
+                      !window.location.pathname.startsWith('/admin/security') &&
+                      !window.location.pathname.startsWith('/admin/forgot-password') &&
+                      !window.location.pathname.startsWith('/admin/two-factor-setup');
   
   // Handle admin route access
   if (isAdminRoute) {
-    return <AdminRoute />;
+    // return <AdminRoute />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   useEffect(() => {
@@ -134,7 +140,7 @@ function App() {
         <Routes>
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/canceled" element={<CheckoutCanceled />} />
-          <Route path="/admin" element={<AdminRoute />} />
+          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
