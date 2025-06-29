@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Menu, X, User, LogIn, Bell } from 'lucide-react';
+import { Heart, Menu, X, User, LogIn } from 'lucide-react';
 import Button from '../ui/Button';
-import NotificationBell from '../notifications/NotificationBell';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -102,7 +101,6 @@ const Header: React.FC = () => {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center space-x-4">
-              <NotificationBell userId="demo_user" />
               <Button
                 variant="ghost"
                 onClick={handleGetStarted}
@@ -162,7 +160,6 @@ const Header: React.FC = () => {
                 </button>
               ))}
               <div className="px-4 pt-4 border-t border-gray-200 space-y-2">
-                <NotificationBell userId="demo_user" className="mb-2" />
                 <Button 
                   variant="ghost" 
                   className="w-full justify-start"

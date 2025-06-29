@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { NotificationProvider } from './components/notifications/NotificationProvider';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Hero from './components/sections/Hero';
@@ -11,7 +10,6 @@ import Contact from './components/sections/Contact';
 import Newsletter from './components/sections/Newsletter';
 import MessagingDemo from './components/sections/MessagingDemo';
 import VideoCallDemo from './components/sections/VideoCallDemo';
-import NotificationDemo from './components/notifications/NotificationDemo';
 import PaymentDemo from './components/sections/PaymentDemo';
 import AdvancedSearchDemo from './components/search/AdvancedSearchDemo';
 import CulturalProfilesDemo from './components/cultural/CulturalProfilesDemo';
@@ -22,12 +20,6 @@ import AdminRoute from './components/admin/AdminRoute';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
 import { validateEnvironment } from './lib/security';
 import { usePreloadCriticalImages } from './hooks/useImagePreloader';
-
-// Get authenticated user ID (in a real app, this would come from auth)
-const getCurrentUserId = () => {
-  // For demo purposes, return a fixed ID
-  return 'demo_user';
-};
 
 // Add custom CSS for animations
 const customStyles = `
@@ -69,9 +61,6 @@ const customStyles = `
 function App() {
   // Preload critical images
   usePreloadCriticalImages();
-
-  // Get current user ID
-  const userId = getCurrentUserId();
   
   // Check if we're on admin route
   const isAdminRoute = window.location.pathname === '/admin' || window.location.hash === '#admin';
@@ -106,8 +95,7 @@ function App() {
   }, []);
 
   return (
-    <NotificationProvider userId={userId}>
-      <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
       {/* Toast notifications */}
       <Toaster
         position="top-right"
@@ -145,7 +133,6 @@ function App() {
         <MessagingDemo />
         <VideoCallDemo />
         <PaymentDemo />
-        <NotificationDemo />
         <AdvancedSearchDemo />
         <CulturalProfilesDemo />
         <CulturalCalendar />
@@ -160,8 +147,7 @@ function App() {
       {/* Development tools */}
       <ImagePerformanceMonitor />
       <SecurityMonitor />
-      </div>
-    </NotificationProvider>
+    </div>
   );
 }
 
