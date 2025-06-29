@@ -1,0 +1,18 @@
+# Force HTTPS redirects
+http://pinoywest.netlify.app/* https://pinoywest.netlify.app/:splat 301!
+http://www.pinoywest.netlify.app/* https://pinoywest.netlify.app/:splat 301!
+
+# Admin route protection
+/admin/* /admin/index.html 200
+
+# API rate limiting and security
+/api/* /api/:splat 200
+  Rate-Limit: 100
+  Rate-Limit-Window: 3600
+
+# Security redirects for common attack vectors
+/.env* / 301
+/.git* / 301
+/wp-admin* / 301
+/admin.php* / 301
+/config* / 301
