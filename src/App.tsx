@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -17,6 +17,11 @@ import CulturalProfilesDemo from './components/cultural/CulturalProfilesDemo';
 import CulturalCalendar from './components/cultural/CulturalCalendar';
 import ImagePerformanceMonitor from './components/performance/ImagePerformanceMonitor';
 import SecurityMonitor from './components/security/SecurityMonitor';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminSecuritySettings from './pages/admin/AdminSecuritySettings';
+import AdminForgotPassword from './pages/admin/AdminForgotPassword';
+import AdminTwoFactorSetup from './pages/admin/AdminTwoFactorSetup';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCanceled from './pages/CheckoutCanceled';
 import AdminRoute from './components/admin/AdminRoute';
@@ -130,6 +135,14 @@ function App() {
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/canceled" element={<CheckoutCanceled />} />
           <Route path="/admin" element={<AdminRoute />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/security" element={<AdminSecuritySettings />} />
+          <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+          <Route path="/admin/two-factor-setup" element={<AdminTwoFactorSetup />} />
+          
           <Route path="/" element={
             <>
               {/* Header */}
