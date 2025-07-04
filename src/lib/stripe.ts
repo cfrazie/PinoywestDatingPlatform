@@ -51,28 +51,10 @@ export async function redirectToCheckout(priceId: string) {
   try {
     // Find the product by price ID
     console.log(`Starting checkout process for priceId: ${priceId}`);
-    console.log(`Starting checkout process for priceId: ${priceId}`);
     
     const product = stripeProducts.find(p => p.priceId === priceId);
     
     if (!product) {
-      console.error(`No product found for priceId: ${priceId}`);
-      console.log('Available products:', stripeProducts.map(p => ({
-        name: p.name,
-        priceId: p.priceId,
-        mode: p.mode
-      })));
-      
-      // Try case-insensitive match as fallback
-      const caseInsensitiveMatch = stripeProducts.find(
-        p => p.priceId.toLowerCase() === priceId.toLowerCase()
-      );
-      
-      if (caseInsensitiveMatch) {
-        console.log(`Found case-insensitive match: ${caseInsensitiveMatch.name} with priceId: ${caseInsensitiveMatch.priceId}`);
-        return redirectToCheckout(caseInsensitiveMatch.priceId);
-      }
-      
       console.error(`No product found for priceId: ${priceId}`);
       console.log('Available products:', stripeProducts.map(p => ({
         name: p.name,
@@ -98,12 +80,6 @@ export async function redirectToCheckout(priceId: string) {
       priceId: product.priceId,
       mode: product.mode
     });
-    
-    console.log(`Found product for checkout:`, {
-      name: product.name,
-      priceId: product.priceId,
-      mode: product.mode
-    });
 
     // Create the checkout session
     const { url } = await createCheckoutSession({
@@ -116,7 +92,6 @@ export async function redirectToCheckout(priceId: string) {
     // Redirect to the checkout page
     if (url) {
       console.log(`Redirecting to checkout URL: ${url.substring(0, 50)}...`);
-      console.log(`Redirecting to checkout URL: ${url.substring(0, 50)}...`);
       // Use direct location change for better user experience
       window.location.href = url;
     } else {
@@ -124,10 +99,6 @@ export async function redirectToCheckout(priceId: string) {
     }
   } catch (error: any) {
     console.error('Error redirecting to checkout:', error);
-    
-    // Show a more detailed error message
-    alert(`Payment Error: ${error.message || 'There was an error processing your payment. Please try again or contact support.'}`);
-    
     
     // Show a more detailed error message
     alert(`Payment Error: ${error.message || 'There was an error processing your payment. Please try again or contact support.'}`);
