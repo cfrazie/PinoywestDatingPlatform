@@ -33,10 +33,12 @@ export const stripeProducts = [
 // Find a product by price ID
 export const findProductByPriceId = (priceId: string) => {
   const product = stripeProducts.find(product => product.priceId === priceId);
+  
   if (!product) {
-    console.warn('No product found with priceId:', priceId);
-    console.log('Available products:', stripeProducts.map(p => ({ name: p.name, priceId: p.priceId })));
+    console.error(`No product found with priceId: ${priceId}`);
+    console.log('Available products:', stripeProducts.map(p => `${p.name} (${p.priceId})`));
   }
+  
   return product;
 };
 

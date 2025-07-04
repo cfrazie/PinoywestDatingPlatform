@@ -53,8 +53,9 @@ export async function redirectToCheckout(priceId: string) {
     const product = findProductByPriceId(priceId);
     
     if (!product) {
-      console.error('Product not found for priceId:', priceId);
-      throw new Error(`Invalid product selected. Price ID: ${priceId}`);
+      console.error(`Product not found for priceId: ${priceId}`);
+      console.log('Available products:', stripeProducts.map(p => ({ name: p.name, priceId: p.priceId })));
+      throw new Error(`Invalid product selected. Price ID: ${priceId} not found in product list.`);
     }
     
     console.log('Redirecting to checkout with product:', product);
