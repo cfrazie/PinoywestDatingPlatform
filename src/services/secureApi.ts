@@ -225,7 +225,7 @@ export const trackEventSecure = async (eventType: string, eventData?: any): Prom
     await supabase
       .from('analytics_events')
       .insert({
-        user_id: 1, // Default user ID for anonymous events
+        user_id: auth.uid() || null, // Use current user ID or null for anonymous events
         event_type: sanitizeInput(eventType),
         event_data: sanitizedEventData,
       });
