@@ -219,6 +219,7 @@ export const trackEventSecure = async (eventType: string, eventData?: any): Prom
     if (!supabase) {
       // Log to console for demo
       console.log('Analytics event (secure):', eventType, sanitizedEventData);
+      console.log('User ID:', auth.uid() || 'anonymous');
       return;
     }
 
