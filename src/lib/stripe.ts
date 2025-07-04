@@ -50,11 +50,13 @@ export async function createCheckoutSession(options: CheckoutOptions) {
 export async function redirectToCheckout(priceId: string) {
   try {
     // Find the product by price ID
-    const product = stripeProducts.find(p => p.priceId === priceId);
+    const product = findProductByPriceId(priceId);
     
     if (!product) {
       throw new Error('Invalid product selected');
     }
+    
+    console.log('Redirecting to checkout with product:', product);
 
     // Create the checkout session
     const { url } = await createCheckoutSession({
@@ -66,6 +68,7 @@ export async function redirectToCheckout(priceId: string) {
 
     // Redirect to the checkout page
     if (url) {
+      console.log('Redirecting to checkout URL:', url);
       window.location.href = url;
     } else {
       throw new Error('No checkout URL returned');
