@@ -32,7 +32,12 @@ export const stripeProducts = [
 
 // Find a product by price ID
 export const findProductByPriceId = (priceId: string) => {
-  return stripeProducts.find(product => product.priceId === priceId);
+  const product = stripeProducts.find(product => product.priceId === priceId);
+  if (!product) {
+    console.warn('No product found with priceId:', priceId);
+    console.log('Available products:', stripeProducts.map(p => ({ name: p.name, priceId: p.priceId })));
+  }
+  return product;
 };
 
 // Get all subscription products

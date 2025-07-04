@@ -40,7 +40,7 @@ const PaymentDemo: React.FC = () => {
   const monthlyPlans = stripeProducts
     .filter(product => !product.name.includes('Annually'))
     .map(product => {      
-      // Extract price from description
+      // Extract price from description - match the first price in the format $XX.XX
       const priceMatch = product.description.match(/\$(\d+\.\d+)/);
       const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
       
@@ -83,11 +83,11 @@ const PaymentDemo: React.FC = () => {
   const yearlyPlans = stripeProducts
     .filter(product => product.name.includes('Annually'))
     .map(product => {      
-      // Extract yearly price from description
+      // Extract yearly price from description - match the first price in the format $XX.XX
       const priceMatch = product.description.match(/\$(\d+\.\d+)/);
       const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
       
-      // Extract monthly equivalent price
+      // Extract monthly equivalent price - look for $XX.XX/month pattern
       const monthlyMatch = product.description.match(/\$(\d+\.\d+)\/month/);
       const monthlyEquivalent = monthlyMatch ? parseFloat(monthlyMatch[1]) : (price / 12);
       

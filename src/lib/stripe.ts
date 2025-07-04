@@ -53,7 +53,8 @@ export async function redirectToCheckout(priceId: string) {
     const product = findProductByPriceId(priceId);
     
     if (!product) {
-      throw new Error('Invalid product selected');
+      console.error('Product not found for priceId:', priceId);
+      throw new Error(`Invalid product selected. Price ID: ${priceId}`);
     }
     
     console.log('Redirecting to checkout with product:', product);
