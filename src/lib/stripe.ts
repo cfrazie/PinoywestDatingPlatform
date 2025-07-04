@@ -53,12 +53,16 @@ export async function redirectToCheckout(priceId: string) {
     const product = findProductByPriceId(priceId);
     
     if (!product) {
-      console.error(`Product not found for priceId: ${priceId}`);
-      console.log('Available products:', stripeProducts.map(p => ({ name: p.name, priceId: p.priceId })));
-      throw new Error(`Invalid product selected. Price ID: ${priceId} not found in product list.`);
+      console.error(`Product not found for priceId: ${priceId}. Available products:`, 
+        stripeProducts.map(p => `${p.name} (${p.priceId}): ${p.description.substring(0, 30)}...`));
+      throw new Error(`Invalid product selected. Price ID: ${priceId} not found.`);
     }
     
-    console.log('Redirecting to checkout with product:', product);
+    console.log('Redirecting to checkout with product:', {
+      name: product.name,
+      priceId: product.priceId,
+      mode: product.mode
+    });
 
     // Create the checkout session
     const { url } = await createCheckoutSession({
@@ -70,7 +74,7 @@ export async function redirectToCheckout(priceId: string) {
 
     // Redirect to the checkout page
     if (url) {
-      console.log('Redirecting to checkout URL:', url);
+      console.log('Redirecting to checkout URL:', url.substring(0, 100) + '...');
       window.location.href = url;
     } else {
       throw new Error('No checkout URL returned');
