@@ -33,23 +33,49 @@ export const stripeProducts = [
 // Find a product by price ID
 export const findProductByPriceId = (priceId: string) => {
   // Log all available products for debugging
-  console.log('Looking for priceId:', priceId);
-  console.log('Available products:', stripeProducts.map(p => ({
-    name: p.name,
-    priceId: p.priceId,
-    mode: p.mode
-  })));
+  console.log(`Looking for priceId: "${priceId}"`);
+  console.log('Available products:', stripeProducts.map(p => {
+    return {
+      name: p.name,
+      priceId: p.priceId,
+      mode: p.mode
+    };
+  }));
   
-  return stripeProducts.find(product => product.priceId === priceId);
+  // Exact match first
+  const exactMatch = stripeProducts.find(product => product.priceId === priceId);
+  if (exactMatch) {
+    console.log(`Found exact match for ${priceId}: ${exactMatch.name}`);
+    return exactMatch;
+  }
+  
+  // Try case-insensitive match as fallback
+  const caseInsensitiveMatch = stripeProducts.find(
+    product => product.priceId.toLowerCase() === priceId.toLowerCase()
+  );
+  
+  if (caseInsensitiveMatch) {
+    console.log(`Found case-insensitive match for ${priceId}: ${caseInsensitiveMatch.name}`);
+    return caseInsensitiveMatch;
+  }
+  
+  console.log(`No product found for priceId: ${priceId}`);
+  return null;
 };
 
 // Validate price ID
 export const validatePriceId = (priceId: string): boolean => {
   const validPriceIds = stripeProducts.map(p => p.priceId);
-  console.log('Validating priceId:', priceId);
+  console.log(`Validating priceId: "${priceId}"`);
   console.log('Valid priceIds:', validPriceIds);
   
-  return validPriceIds.includes(priceId);
+  // Check for exact match
+  if (validPriceIds.includes(priceId)) {
+    return true;
+  }
+  
+  // Check for case-insensitive match
+  return validPriceIds.some(id => id.toLowerCase() === priceId.toLowerCase());
 };
 
 // Get all subscription products

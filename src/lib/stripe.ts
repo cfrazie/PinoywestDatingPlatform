@@ -50,7 +50,7 @@ export async function createCheckoutSession(options: CheckoutOptions) {
 export async function redirectToCheckout(priceId: string) {
   try {
     // Find the product by price ID
-    // Log all available products for debugging
+    console.log('Looking for priceId:', priceId);
     console.log('Available products:', stripeProducts.map(p => ({
       name: p.name,
       priceId: p.priceId,
@@ -60,9 +60,7 @@ export async function redirectToCheckout(priceId: string) {
     const product = stripeProducts.find(p => p.priceId === priceId);
     
     if (!product) {
-      console.error(`Product not found for priceId: ${priceId}`);
-      console.error('Available products:', stripeProducts.map(p => `${p.name} (${p.priceId})`));
-      throw new Error(`Invalid product selected. Please try again or contact support.`);
+      throw new Error(`Product not found for priceId: ${priceId}. Please try again or contact support.`);
     }
     
     console.log('Redirecting to checkout with product:', {
@@ -82,25 +80,16 @@ export async function redirectToCheckout(priceId: string) {
     // Redirect to the checkout page
     if (url) {
       console.log('Redirecting to checkout URL:', url.substring(0, 100) + '...');
-      // Use window.location.assign instead of window.location.href for better error handling
-      window.location.assign(url);
+      // Use window.open to open in a new tab to avoid navigation issues
+      window.open(url, '_blank');
     } else {
       throw new Error('No checkout URL returned from the server');
     }
   } catch (error: any) {
     console.error('Error redirecting to checkout:', error);
     
-    // Provide a more user-friendly error message
-    let errorMessage = 'There was an error processing your request. Please try again.';
-    
-    if (error.message.includes('price_id')) {
-      errorMessage = 'Invalid subscription plan selected. Please try a different plan.';
-    } else if (error.message.includes('URL')) {
-      errorMessage = 'Unable to create checkout session. Please try again later.';
-    }
-    
-    // Show an alert to the user
-    alert(`Payment Error: ${errorMessage}`);
+    // Show a more detailed error message
+    alert(`Payment Error: ${error.message || 'There was an error processing your request. Please try again.'}`);
     
     throw error;
   }

@@ -195,10 +195,8 @@ const PaymentDemo: React.FC = () => {
       return;
     }
     
-    // Validate that we have a valid priceId
-    if (!plan.priceId || typeof plan.priceId !== 'string') {
-      console.error('Invalid priceId:', plan.priceId);
-      alert('Invalid subscription plan selected. Please try again or contact support.');
+    if (!plan.priceId) {
+      alert('Invalid product selected. Please try again.');
       return;
     }
     
@@ -209,7 +207,7 @@ const PaymentDemo: React.FC = () => {
       await redirectToCheckout(plan.priceId);
     } catch (error: any) {
       console.error('Error during checkout:', error);
-      setError('There was an error processing your payment. Please try again or contact support.');
+      setError(error.message || 'There was an error processing your request. Please try again.');
     } finally {
       setIsLoading(false);
     }
