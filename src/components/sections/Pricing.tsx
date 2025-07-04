@@ -152,7 +152,7 @@ const Pricing: React.FC = () => {
   const handlePlanSelect = async (planId: string, planName: string, priceId?: string) => {
     trackEventSecure('pricing_plan_selected', { 
       plan: planId, 
-      billing_cycle: billingCycle,
+      billing_cycle: billingCycle, 
       plan_name: planName 
     });
     
@@ -162,15 +162,16 @@ const Pricing: React.FC = () => {
       return;
     }
 
-    if (!plan.priceId) {
-      alert('Invalid product selected. Please try again.');
+    if (!priceId) {
+      console.error('No price ID provided for plan:', planName);
+      setError('Invalid product selected. Please try again or contact support.');
       return;
     }
 
     try {
       setIsLoading(planId);
-      console.log(`Initiating checkout for plan: ${plan.name} with priceId: ${plan.priceId}`);
-      await redirectToCheckout(plan.priceId);
+      console.log(`Initiating checkout for plan: ${planName} with priceId: ${priceId}`);
+      await redirectToCheckout(priceId);
     } catch (error) {
       console.error('Error during checkout:', error);
       setError('There was an error processing your request. Please try again.');

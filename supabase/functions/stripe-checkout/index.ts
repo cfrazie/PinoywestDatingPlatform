@@ -46,12 +46,10 @@ Deno.serve(async (req) => {
     const { price_id, success_url, cancel_url, mode } = await req.json();
     
     // Log the request for debugging
-    console.log('Checkout request received:', { 
-      price_id, 
-      success_url: success_url.substring(0, 50) + '...',
-      cancel_url: cancel_url.substring(0, 50) + '...',
-      mode 
-    });
+    console.log(`Checkout request received for price_id: ${price_id}`);
+    console.log(`Success URL: ${success_url.substring(0, 50)}...`);
+    console.log(`Cancel URL: ${cancel_url.substring(0, 50)}...`);
+    console.log(`Mode: ${mode}`);
 
     const error = validateParameters(
       { price_id, success_url, cancel_url, mode },
@@ -70,9 +68,30 @@ Deno.serve(async (req) => {
     // Validate that the price_id exists in Stripe
     try {
       console.log(`Retrieving price from Stripe: ${price_id}`);
-      const price = await stripe.prices.retrieve(price_id, {
-        expand: ['product']
-      });
+      let price;
+      
+      try {
+        price = await stripe.prices.retrieve(price_id, {
+          expand: ['product']
+        });
+      } catch (priceError) {
+        console.error(`Error retrieving price ${price_id}:`, priceError);
+        
+        // List available prices for debugging
+        const prices = await stripe.prices.list({
+          limit: 10,
+          active: true,
+        });
+        
+        console.log('Available prices in Stripe:', prices.data.map(p => ({
+          id: p.id,
+          product: p.product,
+          unit_amount: p.unit_amount,
+          currency: p.currency
+        })));
+        
+        return corsResponse({ error: 'Invalid price ID' }, 400);
+      }
       
       if (!price || !price.active) {
         console.error(`Price ${price_id} not found or inactive`);
@@ -219,8 +238,13 @@ Deno.serve(async (req) => {
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
     });
-    
-    console.log(`Checkout session created: ${session.id}, URL: ${session.url?.substring(0, 50)}...`);
+
+    if (session && session.url) {
+      console.log(`Checkout session created: ${session.id}`);
+      console.log(`Checkout URL: ${session.url.substring(0, 50)}...`);
+    } else {
+      console.error('Failed to create checkout session or no URL returned');
+    }
 
     console.log(`Created checkout session ${session.id} for customer ${customerId}`);
 

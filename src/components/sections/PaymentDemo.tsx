@@ -195,15 +195,17 @@ const PaymentDemo: React.FC = () => {
       return;
     }
     
-    if (!plan.priceId) {
-      alert('Invalid product selected. Please try again.');
+    // Validate that we have a price ID
+    if (!plan.priceId || typeof plan.priceId !== 'string') {
+      console.error('Invalid or missing priceId for plan:', plan);
+      setError(`Invalid product selected: ${plan.name}. Please try again or contact support.`);
       return;
     }
     
     try {
       setIsLoading(true);
       setError(null);
-      console.log(`Initiating checkout for plan: ${plan.name} with priceId: ${plan.priceId}`);
+      console.log(`PaymentDemo: Initiating checkout for ${plan.name} (${plan.priceId})`);
       await redirectToCheckout(plan.priceId);
     } catch (error: any) {
       console.error('Error during checkout:', error);

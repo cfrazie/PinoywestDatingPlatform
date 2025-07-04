@@ -33,19 +33,12 @@ export const stripeProducts = [
 // Find a product by price ID
 export const findProductByPriceId = (priceId: string) => {
   // Log all available products for debugging
-  console.log(`Looking for priceId: "${priceId}"`);
-  console.log('Available products:', stripeProducts.map(p => {
-    return {
-      name: p.name,
-      priceId: p.priceId,
-      mode: p.mode
-    };
-  }));
+  console.log(`Looking for product with priceId: ${priceId}`);
   
   // Exact match first
   const exactMatch = stripeProducts.find(product => product.priceId === priceId);
   if (exactMatch) {
-    console.log(`Found exact match for ${priceId}: ${exactMatch.name}`);
+    console.log(`Found exact match: ${exactMatch.name} (${exactMatch.priceId})`);
     return exactMatch;
   }
   
@@ -55,27 +48,37 @@ export const findProductByPriceId = (priceId: string) => {
   );
   
   if (caseInsensitiveMatch) {
-    console.log(`Found case-insensitive match for ${priceId}: ${caseInsensitiveMatch.name}`);
+    console.log(`Found case-insensitive match: ${caseInsensitiveMatch.name} (${caseInsensitiveMatch.priceId})`);
     return caseInsensitiveMatch;
   }
   
-  console.log(`No product found for priceId: ${priceId}`);
+  console.log(`No product found for priceId: ${priceId}. Available products:`, 
+    stripeProducts.map(p => ({ name: p.name, priceId: p.priceId }))
+  );
   return null;
 };
 
 // Validate price ID
 export const validatePriceId = (priceId: string): boolean => {
   const validPriceIds = stripeProducts.map(p => p.priceId);
-  console.log(`Validating priceId: "${priceId}"`);
-  console.log('Valid priceIds:', validPriceIds);
+  console.log(`Validating priceId: ${priceId}`);
   
   // Check for exact match
   if (validPriceIds.includes(priceId)) {
+    console.log(`Price ID ${priceId} is valid`);
     return true;
   }
   
   // Check for case-insensitive match
-  return validPriceIds.some(id => id.toLowerCase() === priceId.toLowerCase());
+  const isValid = validPriceIds.some(id => id.toLowerCase() === priceId.toLowerCase());
+  
+  if (isValid) {
+    console.log(`Price ID ${priceId} is valid (case-insensitive match)`);
+  } else {
+    console.log(`Price ID ${priceId} is invalid. Valid IDs:`, validPriceIds);
+  }
+  
+  return isValid;
 };
 
 // Get all subscription products

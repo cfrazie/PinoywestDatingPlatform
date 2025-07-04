@@ -50,20 +50,32 @@ export async function createCheckoutSession(options: CheckoutOptions) {
 export async function redirectToCheckout(priceId: string) {
   try {
     // Find the product by price ID
-    console.log('Looking for priceId:', priceId);
-    console.log('Available products:', stripeProducts.map(p => ({
-      name: p.name,
-      priceId: p.priceId,
-      mode: p.mode
-    })));
+    console.log(`Starting checkout process for priceId: ${priceId}`);
     
     const product = stripeProducts.find(p => p.priceId === priceId);
     
     if (!product) {
-      throw new Error(`Product not found for priceId: ${priceId}. Please try again or contact support.`);
+      console.error(`No product found for priceId: ${priceId}`);
+      console.log('Available products:', stripeProducts.map(p => ({
+        name: p.name,
+        priceId: p.priceId,
+        mode: p.mode
+      })));
+      
+      // Try case-insensitive match as fallback
+      const caseInsensitiveMatch = stripeProducts.find(
+        p => p.priceId.toLowerCase() === priceId.toLowerCase()
+      );
+      
+      if (caseInsensitiveMatch) {
+        console.log(`Found case-insensitive match: ${caseInsensitiveMatch.name} with priceId: ${caseInsensitiveMatch.priceId}`);
+        return redirectToCheckout(caseInsensitiveMatch.priceId);
+      }
+      
+      throw new Error(`Product not found for priceId: ${priceId}`);
     }
     
-    console.log('Redirecting to checkout with product:', {
+    console.log(`Found product for checkout:`, {
       name: product.name,
       priceId: product.priceId,
       mode: product.mode
@@ -79,9 +91,9 @@ export async function redirectToCheckout(priceId: string) {
 
     // Redirect to the checkout page
     if (url) {
-      console.log('Redirecting to checkout URL:', url.substring(0, 100) + '...');
-      // Use window.open to open in a new tab to avoid navigation issues
-      window.open(url, '_blank');
+      console.log(`Redirecting to checkout URL: ${url.substring(0, 50)}...`);
+      // Use direct location change for better user experience
+      window.location.href = url;
     } else {
       throw new Error('No checkout URL returned from the server');
     }
@@ -89,7 +101,7 @@ export async function redirectToCheckout(priceId: string) {
     console.error('Error redirecting to checkout:', error);
     
     // Show a more detailed error message
-    alert(`Payment Error: ${error.message || 'There was an error processing your request. Please try again.'}`);
+    alert(`Payment Error: ${error.message || 'There was an error processing your payment. Please try again or contact support.'}`);
     
     throw error;
   }
