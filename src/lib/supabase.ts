@@ -5,7 +5,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase environment variables not configured. Some features may not work.');
-  console.log('To configure Supabase, visit the admin section to set up your connection.');
+  console.log('To configure Supabase, visit: http://localhost:5173/#admin');
 }
 
 export const supabase = supabaseUrl && supabaseAnonKey 
