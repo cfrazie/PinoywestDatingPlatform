@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Users, Shield, Clock, Activity, Settings, 
-  Home, Database, Bell, Lock, FileText
+  Home, Database, Bell, Lock, FileText, HardDrive
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -18,6 +18,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange }) =
     { key: 'activity', label: 'Activity Logs', icon: Activity, href: '#' },
     { key: 'sessions', label: 'Active Sessions', icon: Clock, href: '#' },
     { key: 'security', label: 'Security', icon: Lock, href: '/admin/security' },
+    { key: 'backup', label: 'Backup & Recovery', icon: HardDrive, href: '/admin/backup' },
     { key: 'settings', label: 'Settings', icon: Settings, href: '/admin/settings' },
   ];
   

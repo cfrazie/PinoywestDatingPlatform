@@ -22,6 +22,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminSecuritySettings from './pages/admin/AdminSecuritySettings';
 import AdminForgotPassword from './pages/admin/AdminForgotPassword';
 import AdminTwoFactorSetup from './pages/admin/AdminTwoFactorSetup';
+import AdminBackupSettings from './pages/admin/AdminBackupSettings';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCanceled from './pages/CheckoutCanceled';
 // import AdminRoute from './components/admin/AdminRoute';
@@ -148,6 +149,7 @@ function App() {
           <Route path="/admin/security" element={<AdminSecuritySettings />} />
           <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
           <Route path="/admin/two-factor-setup" element={<AdminTwoFactorSetup />} />
+          <Route path="/admin/backup" element={<AdminBackupSettings />} />
           
           <Route path="/" element={
             <>
