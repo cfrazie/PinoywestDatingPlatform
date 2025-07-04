@@ -36,8 +36,11 @@ const Pricing: React.FC = () => {
   // Get monthly and yearly plans from stripe-config
   const monthlyPlans = stripeProducts
     .filter(product => !product.name.includes('Annually'))
-    .map(product => {
-      const price = parseFloat(product.description.match(/\$(\d+\.\d+)/)?.[1] || '0');
+    .map(product => {      
+      // Extract price from description using regex
+      const priceMatch = product.description.match(/\$(\d+\.\d+)/);
+      const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
+      
       return {
         id: product.id,
         name: product.name,
@@ -80,9 +83,15 @@ const Pricing: React.FC = () => {
 
   const yearlyPlans = stripeProducts
     .filter(product => product.name.includes('Annually'))
-    .map(product => {
-      const price = parseFloat(product.description.match(/\$(\d+\.\d+)/)?.[1] || '0');
-      const monthlyEquivalent = parseFloat(product.description.match(/\$(\d+\.\d+)\/month/)?.[1] || '0');
+    .map(product => {      
+      // Extract yearly price from description
+      const priceMatch = product.description.match(/\$(\d+\.\d+)/);
+      const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
+      
+      // Extract monthly equivalent price
+      const monthlyMatch = product.description.match(/\$\((\d+\.\d+)\)/);
+      const monthlyEquivalent = monthlyMatch ? parseFloat(monthlyMatch[1]) : price / 12;
+      
       return {
         id: product.id,
         name: product.name.replace(' Annually', ''),
