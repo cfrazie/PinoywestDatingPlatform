@@ -32,23 +32,24 @@ export const stripeProducts = [
 
 // Find a product by price ID
 export const findProductByPriceId = (priceId: string) => {
-  const product = stripeProducts.find(product => product.priceId === priceId);
+  // Log all available products for debugging
+  console.log('Looking for priceId:', priceId);
+  console.log('Available products:', stripeProducts.map(p => ({
+    name: p.name,
+    priceId: p.priceId,
+    mode: p.mode
+  })));
   
-  if (!product) {
-    console.error(`No product found with priceId: ${priceId}`);
-    console.log('Available products:', stripeProducts.map(p => ({
-      name: p.name,
-      priceId: p.priceId,
-      description: p.description.substring(0, 50) + '...'
-    })));
-  }
+  return stripeProducts.find(product => product.priceId === priceId);
+};
+
+// Validate price ID
+export const validatePriceId = (priceId: string): boolean => {
+  const validPriceIds = stripeProducts.map(p => p.priceId);
+  console.log('Validating priceId:', priceId);
+  console.log('Valid priceIds:', validPriceIds);
   
-  if (!product) {
-    console.error(`No product found with priceId: ${priceId}`);
-    console.log('Available products:', stripeProducts.map(p => `${p.name} (${p.priceId})`));
-  }
-  
-  return product;
+  return validPriceIds.includes(priceId);
 };
 
 // Get all subscription products

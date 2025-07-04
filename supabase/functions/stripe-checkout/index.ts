@@ -44,6 +44,9 @@ Deno.serve(async (req) => {
     }
 
     const { price_id, success_url, cancel_url, mode } = await req.json();
+    
+    // Log the request for debugging
+    console.log('Checkout request:', { price_id, success_url, cancel_url, mode });
 
     const error = validateParameters(
       { price_id, success_url, cancel_url, mode },
@@ -57,6 +60,18 @@ Deno.serve(async (req) => {
 
     if (error) {
       return corsResponse({ error }, 400);
+    }
+    
+    // Validate that the price_id exists in Stripe
+    try {
+      const price = await stripe.prices.retrieve(price_id);
+      if (!price || !price.active) {
+        console.error(`Price ${price_id} not found or inactive`);
+        return corsResponse({ error: 'Invalid or inactive price ID' }, 400);
+      }
+    } catch (error) {
+      console.error(`Error retrieving price ${price_id}:`, error);
+      return corsResponse({ error: 'Invalid price ID' }, 400);
     }
 
     const authHeader = req.headers.get('Authorization')!;
@@ -180,7 +195,7 @@ Deno.serve(async (req) => {
     // create Checkout Session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ['card'], 
       line_items: [
         {
           price: price_id,
@@ -190,6 +205,8 @@ Deno.serve(async (req) => {
       mode,
       success_url,
       cancel_url,
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
     });
 
     console.log(`Created checkout session ${session.id} for customer ${customerId}`);

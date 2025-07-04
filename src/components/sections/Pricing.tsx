@@ -37,9 +37,13 @@ const Pricing: React.FC = () => {
   const monthlyPlans = stripeProducts
     .filter(product => !product.name.includes('Annually'))
     .map(product => {      
-      // Extract price from description - match the first price in the format $XX.XX
-      const priceMatch = product.description.match(/\$(\d+\.\d+)/);
-      const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
+      // Use hardcoded values for reliability
+      let price = 0;
+      if (product.name === 'Premium') {
+        price = 14.99;
+      } else if (product.name === 'Platinum') {
+        price = 29.99;
+      }
       
       return {
         id: product.id,
@@ -84,15 +88,19 @@ const Pricing: React.FC = () => {
   const yearlyPlans = stripeProducts
     .filter(product => product.name.includes('Annually'))
     .map(product => {      
-      // Extract yearly price from description - match the first price in the format $XXX.XX or $X.XX
-      const priceMatch = product.description.match(/\$(\d+\.\d+)/);
-      const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
+      // Use hardcoded values for reliability
+      let price = 0;
+      let monthlyEquivalent = 0;
       
-      // Extract monthly equivalent price - look for $XX.XX/month pattern
-      const monthlyMatch = product.description.match(/\$(\d+\.\d+)\/month/);
-      const monthlyEquivalent = monthlyMatch ? parseFloat(monthlyMatch[1]) : (price / 12);
+      if (product.name === 'Premium Annually') {
+        price = 149.99;
+        monthlyEquivalent = 12.50;
+      } else if (product.name === 'Platinum Annually') {
+        price = 299.99;
+        monthlyEquivalent = 25.00;
+      }
       
-      console.log(`Processing ${product.name}: Price ID ${product.priceId}, Price: $${price}, Monthly: $${monthlyEquivalent}`);
+      console.log(`Processing ${product.name}: Price ID ${product.priceId}, Price: $${price}`);
       
       return {
         id: product.id,
@@ -154,17 +162,20 @@ const Pricing: React.FC = () => {
       return;
     }
 
-    if (!priceId) {
-      alert('Invalid product selected. Please try again.');
+    // Validate that we have a valid priceId
+    if (!plan.priceId || typeof plan.priceId !== 'string') {
+      console.error('Invalid priceId:', plan.priceId);
+      alert('Invalid subscription plan selected. Please try again or contact support.');
       return;
     }
 
     try {
       setIsLoading(planId);
       await redirectToCheckout(priceId);
+      console.log(`Initiating checkout for plan: ${plan.name} with priceId: ${plan.priceId}`);
     } catch (error) {
       console.error('Error during checkout:', error);
-      alert('There was an error processing your request. Please try again.');
+      setError('There was an error processing your payment. Please try again or contact support.');
     } finally {
       setIsLoading(null);
     }
