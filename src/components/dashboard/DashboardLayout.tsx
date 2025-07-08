@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, Heart, MessageCircle, Settings, Bell, Search,
-  Menu, X, Home, Users, Star, Gift, Shield, LogOut
+  Menu, X, Home, Users, Star, Gift, Shield, LogOut,
+  CreditCard, Calendar, Compass
 } from 'lucide-react';
 import Button from '../ui/Button';
 
@@ -20,14 +21,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navigationItems = [
-    { id: 'overview', label: 'Overview', icon: Home },
-    { id: 'matches', label: 'Matches', icon: Heart },
-    { id: 'messages', label: 'Messages', icon: MessageCircle },
-    { id: 'discover', label: 'Discover', icon: Search },
-    { id: 'profile', label: 'My Profile', icon: User },
-    { id: 'preferences', label: 'Preferences', icon: Settings },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'premium', label: 'Premium', icon: Star },
+    { id: 'overview', label: 'Dashboard', icon: Home, href: '/dashboard' },
+    { id: 'matches', label: 'Matches', icon: Heart, href: '/dashboard/matches' },
+    { id: 'messages', label: 'Messages', icon: MessageCircle, href: '/dashboard/messages' },
+    { id: 'discover', label: 'Discover', icon: Compass, href: '/dashboard/discover' },
+    { id: 'calls', label: 'Video Calls', icon: Video, href: '/dashboard/calls' },
+    { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/dashboard/calendar' },
+    { id: 'profile', label: 'My Profile', icon: User, href: '/dashboard/profile' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
+    { id: 'subscription', label: 'Subscription', icon: CreditCard, href: '/dashboard/subscription' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, href: '/dashboard/notifications' },
   ];
 
   const handleLogout = () => {

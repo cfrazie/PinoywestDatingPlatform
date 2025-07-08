@@ -13,6 +13,7 @@ import MessagingDemo from './components/sections/MessagingDemo';
 import VideoCallDemo from './components/sections/VideoCallDemo';
 import PaymentDemo from './components/sections/PaymentDemo';
 import AdvancedSearchDemo from './components/search/AdvancedSearchDemo';
+import Dashboard from './pages/Dashboard';
 import CulturalProfilesDemo from './components/cultural/CulturalProfilesDemo';
 import CulturalCalendar from './components/cultural/CulturalCalendar';
 import ImagePerformanceMonitor from './components/performance/ImagePerformanceMonitor';
@@ -142,6 +143,8 @@ function App() {
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/canceled" element={<CheckoutCanceled />} />
           <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/*" element={<Dashboard />} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
