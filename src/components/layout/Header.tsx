@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Menu, X, User, LogIn } from 'lucide-react';
 import Button from '../ui/Button';
+import { Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +17,17 @@ const Header: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!supabase) return;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    };
+    
+    checkAuth();
   }, []);
 
   const navItems = [
@@ -101,25 +115,43 @@ const Header: React.FC = () => {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                onClick={handleGetStarted}
-                className={`${
-                  isScrolled 
-                    ? 'text-gray-700 hover:text-gray-900' 
-                    : 'text-gray-900 hover:text-gray-700 bg-white/10 backdrop-blur-sm'
-                }`}
-              >
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
-              </Button>
-              <Button 
-                variant="primary"
-                onClick={handleGetStarted}
-              >
-                <User className="w-4 h-4 mr-2" />
-                Join Now
-              </Button>
+              {isLoggedIn ? (
+                <Button
+                  variant="ghost"
+                  component={Link}
+                  to="/dashboard"
+                  className={`${
+                    isScrolled 
+                      ? 'text-gray-700 hover:text-gray-900' 
+                      : 'text-gray-900 hover:text-gray-700 bg-white/10 backdrop-blur-sm'
+                  }`}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Dashboard
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={handleGetStarted}
+                    className={`${
+                      isScrolled 
+                        ? 'text-gray-700 hover:text-gray-900' 
+                        : 'text-gray-900 hover:text-gray-700 bg-white/10 backdrop-blur-sm'
+                    }`}
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Button>
+                  <Button 
+                    variant="primary"
+                    onClick={handleGetStarted}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Join Now
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile menu button */}

@@ -6,9 +6,23 @@ import OptimizedImage from '../ui/OptimizedImage';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { curatedImages, imageDimensions } from '../../utils/imageOptimization';
 import { trackEventSecure } from '../../services/secureApi';
+import { Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 const Hero: React.FC = () => {
   const { elementRef, isIntersecting } = useIntersectionObserver();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!supabase) return;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    };
+    
+    checkAuth();
+  }, []);
 
   const handleGetStarted = () => {
     trackEventSecure('hero_cta_clicked', { button: 'get_started' });
@@ -112,14 +126,26 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.8, delay: 1.2 }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
-              <Button
-                size="lg"
-                onClick={handleGetStarted}
-                className="group"
-              >
-                <Heart className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-                Start Your Journey
-              </Button>
+              {isLoggedIn ? (
+                <Button
+                  size="lg"
+                  component={Link}
+                  to="/dashboard"
+                  className="group"
+                >
+                  <User className="w-5 h-5 mr-2" />
+                  Go to Dashboard
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  onClick={handleGetStarted}
+                  className="group"
+                >
+                  <Heart className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+                  Start Your Journey
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="lg"
