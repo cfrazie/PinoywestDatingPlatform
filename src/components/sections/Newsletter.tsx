@@ -6,33 +6,86 @@ import Input from '../ui/Input';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { useForm } from '../../hooks/useForm';
 import { newsletterSchema, NewsletterData } from '../../lib/validations';
-import { subscribeToNewsletterSecure } from '../../services/secureApi';
-import toast from 'react-hot-toast';
+import { subscribeToNewsletterEnhanced } from '../../services/enhancedApi';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { useError } from '../error/ErrorProvider';
+import { ValidationError } from '../../lib/errorHandling';
 
 const Newsletter: React.FC = () => {
   const { elementRef, isIntersecting } = useIntersectionObserver();
+  const { showError } = useError();
+  const [fieldError, setFieldError] = React.useState<string>('');
+  
+  const { 
+    executeWithRetry, 
+    isRetrying, 
+    clearError 
+  } = useErrorHandler({
+    maxRetries: 3,
+    onError: (error) => {
+      if (error.code === 'VALIDATION_ERROR') {
+        const validationError = error.context?.originalError;
+        if (validationError instanceof ValidationError && validationError.field === 'email') {
+          setFieldError(validationError.message);
+        } else {
+          showError(error);
+        }
+      } else {
+        showError(error, { 
+          onRetry: () => {
+            clearError();
+            handleSubmit();
+          }
+        });
+      }
+    }
+  });
 
   const {
     values,
-    errors,
     isSubmitting,
     handleChange,
-    handleSubmit,
+    handleSubmit: handleFormSubmit,
   } = useForm<NewsletterData>({
     initialValues: {
       email: '',
     },
     validationSchema: newsletterSchema,
     onSubmit: async (data) => {
-      const result = await subscribeToNewsletterSecure(data);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success(result.message || 'Successfully subscribed!');
-      }
+      setFieldError('');
+      await handleSubmit(data);
     },
   });
 
+  const handleSubmit = async (data?: NewsletterData) => {
+    const formData = data || values;
+    
+    const result = await executeWithRetry(async () => {
+      return await subscribeToNewsletterEnhanced(formData);
+    });
+    
+    if (result?.message) {
+      // Show success message
+      showError({
+        code: 'SUCCESS',
+        message: result.message,
+        userMessage: result.message,
+        severity: 'low',
+        timestamp: new Date().toISOString()
+      } as any, {
+        autoHide: true,
+        duration: 3000
+      });
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange('email', e.target.value);
+    // Clear field error when user starts typing
+    if (fieldError) {
+      setFieldError('');
+    }
+  };
   const benefits = [
     {
       icon: Heart,
@@ -104,8 +157,8 @@ const Newsletter: React.FC = () => {
                 <Input
                   type="email"
                   value={values.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  error={errors.email}
+                  onChange={handleEmailChange}
+                  error={fieldError}
                   placeholder="Enter your email address"
                   className="bg-white text-gray-900"
                   required
@@ -113,10 +166,11 @@ const Newsletter: React.FC = () => {
               </div>
               <Button
                 type="submit"
-                loading={isSubmitting}
+                loading={isSubmitting || isRetrying}
                 className="bg-white text-blue-600 hover:bg-gray-100 whitespace-nowrap"
+                disabled={!!fieldError}
               >
-                Subscribe Now
+                {isRetrying ? 'Retrying...' : 'Subscribe Now'}
               </Button>
             </form>
             <p className="text-sm text-blue-100 mt-4">

@@ -40,6 +40,8 @@ A comprehensive full-stack landing page for a Filipino-Western dating platform b
 - **Notifications**: React Hot Toast
 - **Testing**: Vitest, Testing Library
 - **Deployment**: Netlify (Frontend), Supabase (Backend)
+- **Error Handling**: Comprehensive error boundary system with offline support
+- **Monitoring**: Real-time error logging and analytics
 
 ## 📦 Installation
 
@@ -181,6 +183,8 @@ npm run test:ui
 - **CORS Configuration**: Proper cross-origin resource sharing
 - **Environment Variables**: Sensitive data stored securely
 - **Row Level Security**: Database-level access control
+- **Error Handling**: Secure error logging without exposing sensitive data
+- **Offline Support**: Graceful degradation when offline
 
 ## 🎨 Customization
 
@@ -219,6 +223,9 @@ theme: {
 - **Bundle Analysis**: Use `npm run build` to analyze bundle size
 - **Caching**: Proper HTTP caching headers
 - **CDN**: Static assets served via CDN
+- **Error Recovery**: Automatic retry mechanisms with exponential backoff
+- **Circuit Breakers**: Prevent cascading failures in API calls
+- **Offline Caching**: Smart caching for offline functionality
 
 ### Image Optimization Features
 - **Automatic Format Detection**: WebP support with JPEG fallback
@@ -228,6 +235,14 @@ theme: {
 - **Performance Monitoring**: Real-time metrics in development (Ctrl+Shift+I)
 - **Error Handling**: Graceful fallbacks for failed image loads
 - **Progressive Enhancement**: Blur placeholders while loading
+- **Global Error Boundary**: Catches and handles React component errors
+- **Network Error Recovery**: Automatic retry with exponential backoff
+- **Offline Queue**: Actions are queued when offline and executed when back online
+- **User-Friendly Messages**: Technical errors converted to user-friendly language
+- **Error Analytics**: Comprehensive error logging and monitoring dashboard
+- **Validation Errors**: Real-time form validation with helpful error messages
+- **Circuit Breakers**: Prevent system overload during high error rates
+- **Graceful Degradation**: App continues to function even when some services fail
 
 ## 🤝 Contributing
 

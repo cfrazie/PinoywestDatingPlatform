@@ -27,6 +27,10 @@ export const contactFormSchema = z.object({
     'Name must be at least 2 characters'
   ),
   email: secureEmail,
+  subject: secureString(5, 200).refine(
+    (val) => val.trim().length >= 5,
+    'Subject must be at least 5 characters'
+  ),
   message: secureString(10, 1000).refine(
     (val) => val.trim().length >= 10,
     'Message must be at least 10 characters'

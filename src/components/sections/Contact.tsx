@@ -7,35 +7,98 @@ import Textarea from '../ui/Textarea';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { useForm } from '../../hooks/useForm';
 import { contactFormSchema, ContactFormData } from '../../lib/validations';
-import { submitContactFormSecure } from '../../services/secureApi';
-import toast from 'react-hot-toast';
+import { submitContactFormEnhanced } from '../../services/enhancedApi';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { useError } from '../error/ErrorProvider';
+import ValidationErrorDisplay, { useValidationErrors } from '../error/ValidationErrorDisplay';
+import { ValidationError } from '../../lib/errorHandling';
 
 const Contact: React.FC = () => {
   const { elementRef, isIntersecting } = useIntersectionObserver();
+  const { showError } = useError();
+  const { 
+    errors: validationErrors, 
+    addError, 
+    removeError, 
+    clearErrors,
+    hasErrors 
+  } = useValidationErrors();
+  
+  const { 
+    executeWithRetry, 
+    isRetrying, 
+    error: submitError,
+    clearError 
+  } = useErrorHandler({
+    maxRetries: 3,
+    onError: (error) => {
+      if (error.code === 'VALIDATION_ERROR') {
+        // Handle validation errors
+        const validationError = error.context?.originalError;
+        if (validationError instanceof ValidationError && validationError.field) {
+          addError(validationError.field, validationError.message);
+        } else {
+          showError(error);
+        }
+      } else {
+        showError(error, { 
+          onRetry: () => {
+            clearError();
+            handleSubmit();
+          }
+        });
+      }
+    }
+  });
 
   const {
     values,
-    errors,
     isSubmitting,
     handleChange,
-    handleSubmit,
+    handleSubmit: handleFormSubmit,
   } = useForm<ContactFormData>({
     initialValues: {
       name: '',
       email: '',
+      subject: '',
       message: '',
     },
     validationSchema: contactFormSchema,
     onSubmit: async (data) => {
-      const result = await submitContactFormSecure(data);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success(result.message || 'Message sent successfully!');
-      }
+      clearErrors();
+      await handleSubmit(data);
     },
   });
 
+  const handleSubmit = async (data?: ContactFormData) => {
+    const formData = data || values;
+    
+    const result = await executeWithRetry(async () => {
+      return await submitContactFormEnhanced(formData);
+    });
+    
+    if (result?.message) {
+      // Show success message
+      showError({
+        code: 'SUCCESS',
+        message: result.message,
+        userMessage: result.message,
+        severity: 'low',
+        timestamp: new Date().toISOString()
+      } as any, {
+        autoHide: true,
+        duration: 3000
+      });
+    }
+  };
+
+  const handleFieldChange = (field: keyof ContactFormData, value: string) => {
+    handleChange(field, value);
+    // Clear validation error for this field when user starts typing
+    if (hasErrors) {
+      removeError(field);
+    }
+  };
   const contactInfo = [
     {
       icon: Mail,
@@ -98,13 +161,19 @@ const Contact: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Validation Errors */}
+              <ValidationErrorDisplay 
+                errors={validationErrors}
+                onDismiss={removeError}
+              />
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="Full Name"
                   type="text"
                   value={values.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  error={errors.name}
+                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  error={validationErrors.find(e => e.field === 'name')?.message}
                   placeholder="Your full name"
                   required
                 />
@@ -112,19 +181,28 @@ const Contact: React.FC = () => {
                   label="Email Address"
                   type="email"
                   value={values.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  error={errors.email}
+                  onChange={(e) => handleFieldChange('email', e.target.value)}
+                  error={validationErrors.find(e => e.field === 'email')?.message}
                   placeholder="your@email.com"
                   required
                 />
               </div>
 
+              <Input
+                label="Subject"
+                type="text"
+                value={values.subject}
+                onChange={(e) => handleFieldChange('subject', e.target.value)}
+                error={validationErrors.find(e => e.field === 'subject')?.message}
+                placeholder="What's this about?"
+                required
+              />
 
               <Textarea
                 label="Message"
                 value={values.message}
-                onChange={(e) => handleChange('message', e.target.value)}
-                error={errors.message}
+                onChange={(e) => handleFieldChange('message', e.target.value)}
+                error={validationErrors.find(e => e.field === 'message')?.message}
                 placeholder="Tell us how we can help you..."
                 rows={5}
                 required
@@ -133,11 +211,12 @@ const Contact: React.FC = () => {
               <Button
                 type="submit"
                 size="lg"
-                loading={isSubmitting}
+                loading={isSubmitting || isRetrying}
                 className="w-full"
+                disabled={hasErrors}
               >
                 <Send className="w-5 h-5 mr-2" />
-                Send Message
+                {isRetrying ? 'Retrying...' : 'Send Message'}
               </Button>
             </form>
           </motion.div>

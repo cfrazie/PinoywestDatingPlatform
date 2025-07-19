@@ -2,6 +2,8 @@
 import { supabase } from '../lib/supabase';
 import { ContactFormData, NewsletterData } from '../lib/validations';
 import { ApiResponse } from '../types';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { NetworkError, ValidationError, OfflineError } from '../lib/errorHandling';
 import { 
   sanitizeInput, 
   validateEmail, 
@@ -37,6 +39,11 @@ const getClientIdentifier = (): string => {
 // Enhanced contact form submission with security
 export const submitContactFormSecure = async (data: ContactFormData): Promise<ApiResponse<any>> => {
   try {
+    // Check if offline
+    if (!navigator.onLine) {
+      throw new OfflineError('You\'re offline. Your message will be sent when you reconnect.');
+    }
+
     const clientId = getClientIdentifier();
     
     // Rate limiting check
@@ -46,7 +53,7 @@ export const submitContactFormSecure = async (data: ContactFormData): Promise<Ap
         details: { endpoint: 'contact_form', clientId },
         userAgent: navigator.userAgent
       });
-      return { error: 'Too many requests. Please try again later.' };
+      throw new ValidationError('Too many requests. Please try again later.');
     }
     
     // Validate and sanitize input
@@ -59,25 +66,25 @@ export const submitContactFormSecure = async (data: ContactFormData): Promise<Ap
         details: { endpoint: 'contact_form', data: sanitizedData },
         userAgent: navigator.userAgent
       });
-      return { error: 'Invalid request detected.' };
+      throw new ValidationError('Invalid request detected.');
     }
     
     // Additional email validation
     if (!validateEmail(sanitizedData.email)) {
-      return { error: 'Please enter a valid email address.' };
+      throw new ValidationError('Please enter a valid email address.', 'email');
     }
     
     // Length and content validation
     if (sanitizedData.name.length < 2 || sanitizedData.name.length > 100) {
-      return { error: 'Name must be between 2 and 100 characters.' };
+      throw new ValidationError('Name must be between 2 and 100 characters.', 'name');
     }
     
     if (sanitizedData.subject.length < 5 || sanitizedData.subject.length > 200) {
-      return { error: 'Subject must be between 5 and 200 characters.' };
+      throw new ValidationError('Subject must be between 5 and 200 characters.', 'subject');
     }
     
     if (sanitizedData.message.length < 10 || sanitizedData.message.length > 1000) {
-      return { error: 'Message must be between 10 and 1000 characters.' };
+      throw new ValidationError('Message must be between 10 and 1000 characters.', 'message');
     }
     
     if (!supabase) {
@@ -95,10 +102,13 @@ export const submitContactFormSecure = async (data: ContactFormData): Promise<Ap
       .insert({
         name: sanitizedData.name,
         email: sanitizedData.email,
+        subject: sanitizedData.subject,
         message: sanitizedData.message,
       });
 
-    if (error) throw error;
+    if (error) {
+      throw new NetworkError(error.message, 500);
+    }
 
     // Track successful submission
     await trackEventSecure('contact_form_submitted', { 
@@ -108,19 +118,23 @@ export const submitContactFormSecure = async (data: ContactFormData): Promise<Ap
 
     return { message: 'Thank you for your message! We\'ll get back to you soon.' };
   } catch (error) {
+    if (error instanceof ValidationError || error instanceof OfflineError || error instanceof NetworkError) {
+      throw error;
+    }
+    
     console.error('Contact form submission error:', error);
-    logSecurityEvent({
-      type: 'validation_error',
-      details: { error: error instanceof Error ? error.message : 'Unknown error' },
-      userAgent: navigator.userAgent
-    });
-    return { error: 'Failed to submit form. Please try again.' };
+    throw new NetworkError('Failed to submit form. Please try again.');
   }
 };
 
 // Enhanced newsletter subscription with security
 export const subscribeToNewsletterSecure = async (data: NewsletterData): Promise<ApiResponse<any>> => {
   try {
+    // Check if offline
+    if (!navigator.onLine) {
+      throw new OfflineError('You\'re offline. Your subscription will be processed when you reconnect.');
+    }
+
     const clientId = getClientIdentifier();
     
     // Rate limiting check
@@ -130,7 +144,7 @@ export const subscribeToNewsletterSecure = async (data: NewsletterData): Promise
         details: { endpoint: 'newsletter', clientId },
         userAgent: navigator.userAgent
       });
-      return { error: 'Too many requests. Please try again later.' };
+      throw new ValidationError('Too many requests. Please try again later.');
     }
     
     // Validate and sanitize input
@@ -143,12 +157,12 @@ export const subscribeToNewsletterSecure = async (data: NewsletterData): Promise
         details: { endpoint: 'newsletter', data: sanitizedData },
         userAgent: navigator.userAgent
       });
-      return { error: 'Invalid request detected.' };
+      throw new ValidationError('Invalid request detected.');
     }
     
     // Enhanced email validation
     if (!validateEmail(sanitizedData.email)) {
-      return { error: 'Please enter a valid email address.' };
+      throw new ValidationError('Please enter a valid email address.', 'email');
     }
     
     if (!supabase) {
@@ -165,7 +179,7 @@ export const subscribeToNewsletterSecure = async (data: NewsletterData): Promise
       .single();
 
     if (existing) {
-      return { error: 'This email is already subscribed to our newsletter.' };
+      throw new ValidationError('This email is already subscribed to our newsletter.', 'email');
     }
 
     const { error } = await supabase
@@ -174,7 +188,9 @@ export const subscribeToNewsletterSecure = async (data: NewsletterData): Promise
         email: sanitizedData.email
       });
 
-    if (error) throw error;
+    if (error) {
+      throw new NetworkError(error.message, 500);
+    }
 
     // Track successful subscription
     await trackEventSecure('newsletter_subscribed', { 
@@ -183,13 +199,12 @@ export const subscribeToNewsletterSecure = async (data: NewsletterData): Promise
 
     return { message: 'Successfully subscribed to our newsletter!' };
   } catch (error) {
+    if (error instanceof ValidationError || error instanceof OfflineError || error instanceof NetworkError) {
+      throw error;
+    }
+    
     console.error('Newsletter subscription error:', error);
-    logSecurityEvent({
-      type: 'validation_error',
-      details: { error: error instanceof Error ? error.message : 'Unknown error' },
-      userAgent: navigator.userAgent
-    });
-    return { error: 'Failed to subscribe. Please try again.' };
+    throw new NetworkError('Failed to subscribe. Please try again.');
   }
 };
 

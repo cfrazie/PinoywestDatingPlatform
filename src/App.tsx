@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import ErrorBoundary from './components/error/ErrorBoundary';
+import { ErrorProvider } from './components/error/ErrorProvider';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Hero from './components/sections/Hero';
@@ -30,6 +32,7 @@ import CheckoutCanceled from './pages/CheckoutCanceled';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
 import { validateEnvironment } from './lib/security';
 import { usePreloadCriticalImages } from './hooks/useImagePreloader';
+import { logError } from './lib/errorLogger';
 
 // Add custom CSS for animations
 const customStyles = `
@@ -104,88 +107,114 @@ function App() {
     // Track page view with secure tracking
     trackEventSecure('page_view', { page: 'landing' });
 
+    // Global error handler for unhandled promise rejections
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      logError(new Error(event.reason), { type: 'unhandled_promise_rejection' });
+    };
+
+    // Global error handler for JavaScript errors
+    const handleError = (event: ErrorEvent) => {
+      console.error('Global error:', event.error);
+      logError(event.error, { 
+        type: 'global_error',
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+      });
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+
     // Cleanup
     return () => {
       document.head.removeChild(styleSheet);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
     };
   }, []);
 
   return (
-    <Router>
-      <div className="min-h-screen bg-white">
-        {/* Toast notifications */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-            success: {
-              duration: 3000,
-              iconTheme: {
-                primary: '#10B981',
-                secondary: '#fff',
-              },
-            },
-            error: {
-              duration: 4000,
-              iconTheme: {
-                primary: '#EF4444',
-                secondary: '#fff',
-              },
-            },
-          }}
-        />
+    <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+      <ErrorProvider>
+        <Router>
+          <div className="min-h-screen bg-white">
+            {/* Toast notifications */}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: '#10B981',
+                    secondary: '#fff',
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: '#EF4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
 
-        <Routes>
-          <Route path="/checkout/success" element={<CheckoutSuccess />} />
-          <Route path="/checkout/canceled" element={<CheckoutCanceled />} />
-          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/*" element={<Dashboard />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/security" element={<AdminSecuritySettings />} />
-          <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
-          <Route path="/admin/two-factor-setup" element={<AdminTwoFactorSetup />} />
-          <Route path="/admin/backup" element={<AdminBackupSettings />} />
-          
-          <Route path="/" element={
-            <>
-              {/* Header */}
-              <Header />
+            <Routes>
+              <Route path="/checkout/success" element={<CheckoutSuccess />} />
+              <Route path="/checkout/canceled" element={<CheckoutCanceled />} />
+              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/*" element={<Dashboard />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/security" element={<AdminSecuritySettings />} />
+              <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+              <Route path="/admin/two-factor-setup" element={<AdminTwoFactorSetup />} />
+              <Route path="/admin/backup" element={<AdminBackupSettings />} />
+              
+              <Route path="/" element={
+                <>
+                  {/* Header */}
+                  <Header />
 
-              {/* Main content */}
-              <main>
-                <Hero />
-                <Features />
-                <Testimonials />
-                <MessagingDemo />
-                <VideoCallDemo />
-                <PaymentDemo />
-                <AdvancedSearchDemo />
-                <CulturalProfilesDemo />
-                <CulturalCalendar />
-                <Pricing />
-                <Newsletter />
-                <Contact />
-              </main>
+                  {/* Main content */}
+                  <main>
+                    <Hero />
+                    <Features />
+                    <Testimonials />
+                    <MessagingDemo />
+                    <VideoCallDemo />
+                    <PaymentDemo />
+                    <AdvancedSearchDemo />
+                    <CulturalProfilesDemo />
+                    <CulturalCalendar />
+                    <Pricing />
+                    <Newsletter />
+                    <Contact />
+                  </main>
 
-              {/* Footer */}
-              <Footer />
+                  {/* Footer */}
+                  <Footer />
 
-              {/* Development tools */}
-              <ImagePerformanceMonitor />
-              <SecurityMonitor />
-            </>
-          } />
-        </Routes>
-      </div>
-    </Router>
+                  {/* Development tools */}
+                  <ImagePerformanceMonitor />
+                  <SecurityMonitor />
+                </>
+              } />
+            </Routes>
+          </div>
+        </Router>
+      </ErrorProvider>
+    </ErrorBoundary>
   );
 }
 
