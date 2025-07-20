@@ -31,6 +31,7 @@ import AdminTwoFactorSetup from './pages/admin/AdminTwoFactorSetup';
 import AdminBackupSettings from './pages/admin/AdminBackupSettings';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCanceled from './pages/CheckoutCanceled';
+import DashboardTesting from './pages/DashboardTesting';
 // import AdminRoute from './components/admin/AdminRoute';
 import { AnalyticsProvider } from './components/analytics/AnalyticsProvider';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
@@ -180,6 +181,7 @@ function App() {
                 <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/*" element={<Dashboard />} />
+                <Route path="/dashboard-testing" element={<DashboardTesting />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<AdminLogin />} />

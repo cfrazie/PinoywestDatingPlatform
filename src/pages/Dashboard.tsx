@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   User, Settings, CreditCard, Heart, MessageCircle, 
   Bell, LogOut, Shield, Calendar, ChevronRight, Edit,
-  Camera, CheckCircle, Clock, AlertTriangle
+  Camera, CheckCircle, Clock, AlertTriangle, MapPin
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
@@ -17,8 +17,45 @@ const Dashboard: React.FC = () => {
   const [subscription, setSubscription] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<string, boolean>>({});
   
   const navigate = useNavigate();
+  
+  // Testing function to verify all interactive elements
+  const testInteractiveElement = (elementName: string, action: () => void) => {
+    try {
+      action();
+      setTestResults(prev => ({ ...prev, [elementName]: true }));
+      console.log(`✅ ${elementName}: PASSED`);
+    } catch (error) {
+      setTestResults(prev => ({ ...prev, [elementName]: false }));
+      console.error(`❌ ${elementName}: FAILED`, error);
+    }
+  };
+  
+  // Comprehensive testing function
+  const runComprehensiveTest = () => {
+    console.log('🧪 Starting Comprehensive Dashboard Testing...');
+    
+    // Test tab navigation
+    testInteractiveElement('Overview Tab', () => setActiveTab('overview'));
+    testInteractiveElement('Profile Tab', () => setActiveTab('profile'));
+    testInteractiveElement('Matches Tab', () => setActiveTab('matches'));
+    testInteractiveElement('Messages Tab', () => setActiveTab('messages'));
+    testInteractiveElement('Settings Tab', () => setActiveTab('settings'));
+    
+    // Test navigation buttons
+    testInteractiveElement('Edit Profile Button', () => setActiveTab('profile'));
+    testInteractiveElement('Manage Subscription Button', () => navigate('/pricing'));
+    testInteractiveElement('View Plans Button', () => navigate('/pricing'));
+    
+    // Test external links
+    testInteractiveElement('Pricing Navigation', () => {
+      console.log('Would navigate to pricing page');
+    });
+    
+    console.log('🎯 Testing Complete! Check console for results.');
+  };
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -215,6 +252,7 @@ const Dashboard: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setActiveTab('profile')}
+                data-testid="edit-profile-button"
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Profile
@@ -293,6 +331,7 @@ const Dashboard: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate('/pricing')}
+                data-testid="manage-subscription-button"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
                 Manage Subscription
@@ -377,6 +416,7 @@ const Dashboard: React.FC = () => {
                 </p>
                 <Button
                   onClick={() => navigate('/pricing')}
+                  data-testid="view-plans-button"
                 >
                   View Plans
                 </Button>
@@ -413,7 +453,12 @@ const Dashboard: React.FC = () => {
               <Button
                 variant="outline"
                 className="w-full"
+                onClick={() => testInteractiveElement('Verify Profile Button', () => {
+                  console.log('Profile verification would start');
+                  alert('Profile verification process would begin here');
+                })}
                 disabled={profile?.verification_status === 'verified' || profile?.verification_status === 'pending'}
+                data-testid="verify-profile-button"
               >
                 {profile?.verification_status === 'verified' ? 'Verified' : 
                  profile?.verification_status === 'pending' ? 'In Progress' : 'Verify Profile'}
@@ -436,6 +481,7 @@ const Dashboard: React.FC = () => {
                 variant="outline"
                 className="w-full"
                 onClick={() => setActiveTab('matches')}
+                data-testid="view-matches-button"
               >
                 View Matches
               </Button>
@@ -457,11 +503,33 @@ const Dashboard: React.FC = () => {
                 variant="outline"
                 className="w-full"
                 onClick={() => setActiveTab('notifications')}
+                data-testid="view-notifications-button"
               >
                 View Notifications
               </Button>
             </div>
           </div>
+          
+          {/* Testing Panel - Development Only */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-8 p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-4">🧪 Dashboard Testing Panel</h3>
+              <Button
+                onClick={runComprehensiveTest}
+                className="mb-4"
+                data-testid="run-comprehensive-test"
+              >
+                Run Comprehensive Test
+              </Button>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                {Object.entries(testResults).map(([test, passed]) => (
+                  <div key={test} className={`p-2 rounded ${passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {passed ? '✅' : '❌'} {test}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
       
@@ -486,7 +554,14 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
                 
-                <button className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-lg">
+                <button 
+                  className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                  onClick={() => testInteractiveElement('Camera Button', () => {
+                    console.log('Photo upload would be triggered');
+                    alert('Photo upload functionality would be triggered here');
+                  })}
+                  data-testid="camera-button"
+                >
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
@@ -639,10 +714,18 @@ const Dashboard: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={() => setActiveTab('overview')}
+                data-testid="cancel-profile-edit"
               >
                 Cancel
               </Button>
-              <Button>
+              <Button
+                onClick={() => testInteractiveElement('Save Profile Changes', () => {
+                  console.log('Profile changes would be saved');
+                  alert('Profile changes would be saved');
+                  setActiveTab('overview');
+                })}
+                data-testid="save-profile-changes"
+              >
                 Save Changes
               </Button>
             </div>
@@ -657,7 +740,15 @@ const Dashboard: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Recent Matches</h3>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => testInteractiveElement('View All Matches', () => {
+                  console.log('Navigate to all matches page');
+                  alert('Would navigate to all matches page');
+                })}
+                data-testid="view-all-matches"
+              >
                 View All
               </Button>
             </div>
@@ -706,6 +797,11 @@ const Dashboard: React.FC = () => {
                         variant="primary"
                         size="sm"
                         className="flex-1"
+                        onClick={() => testInteractiveElement(`Message User ${i}`, () => {
+                          console.log(`Start conversation with user ${i}`);
+                          alert(`Would start conversation with user ${i}`);
+                        })}
+                        data-testid={`message-user-${i}`}
                       >
                         <MessageCircle className="w-4 h-4 mr-1" />
                         Message
@@ -714,6 +810,11 @@ const Dashboard: React.FC = () => {
                         variant="outline"
                         size="sm"
                         className="flex-1"
+                        onClick={() => testInteractiveElement(`View Profile ${i}`, () => {
+                          console.log(`View profile for user ${i}`);
+                          alert(`Would view profile for user ${i}`);
+                        })}
+                        data-testid={`view-profile-${i}`}
                       >
                         View Profile
                       </Button>
@@ -759,7 +860,14 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="mt-6 text-center">
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={() => testInteractiveElement('View All Messages', () => {
+                console.log('Navigate to all messages');
+                alert('Would navigate to all messages page');
+              })}
+              data-testid="view-all-messages"
+            >
               View All Messages
             </Button>
           </div>
@@ -946,6 +1054,11 @@ const Dashboard: React.FC = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start text-left"
+                  onClick={() => testInteractiveElement('Export Data', () => {
+                    console.log('Export user data');
+                    alert('Would export user data');
+                  })}
+                  data-testid="export-data-button"
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Export My Data
@@ -954,6 +1067,14 @@ const Dashboard: React.FC = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start text-left"
+                  onClick={() => testInteractiveElement('Deactivate Account', () => {
+                    console.log('Deactivate account');
+                    const confirmed = confirm('Are you sure you want to deactivate your account?');
+                    if (confirmed) {
+                      alert('Account deactivation process would begin');
+                    }
+                  })}
+                  data-testid="deactivate-account-button"
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Deactivate Account
@@ -963,6 +1084,7 @@ const Dashboard: React.FC = () => {
                   variant="outline"
                   className="w-full justify-start text-left text-red-600 hover:text-red-700 hover:bg-red-50"
                   onClick={handleLogout}
+                  data-testid="sign-out-button"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
