@@ -190,10 +190,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 }}
                 data-testid="notifications-bell"
               >
+                onClick={() => {
+                  console.log('Notifications clicked');
+                  alert('Notifications panel would open');
+                }}
+                data-testid="notifications-bell"
+              >
                 <Bell className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </button>
               <button className="p-2 text-gray-400 hover:text-gray-600">
+                onClick={() => {
+                  console.log('Gifts clicked');
+                  alert('Gifts panel would open');
+                }}
+                data-testid="gifts-button"
+              >
                 onClick={() => {
                   console.log('Gifts clicked');
                   alert('Gifts panel would open');
