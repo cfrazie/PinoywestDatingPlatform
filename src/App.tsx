@@ -5,6 +5,9 @@ import ErrorBoundary from './components/error/ErrorBoundary';
 import { ErrorProvider } from './components/error/ErrorProvider';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import StickyNavigation from './components/navigation/StickyNavigation';
+import MobileBottomNavigation from './components/navigation/MobileBottomNavigation';
+import SkipNavigation from './components/navigation/SkipNavigation';
 import Hero from './components/sections/Hero';
 import Features from './components/sections/Features';
 import Testimonials from './components/sections/Testimonials';
@@ -142,6 +145,9 @@ function App() {
         <AnalyticsProvider>
           <Router>
             <div className="min-h-screen bg-white">
+              {/* Skip Navigation for Accessibility */}
+              <SkipNavigation />
+              
               {/* Toast notifications */}
               <Toaster
                 position="top-right"
@@ -186,10 +192,21 @@ function App() {
                 <Route path="/" element={
                   <>
                     {/* Header */}
-                    <Header />
+                    <Header id="navigation" />
+
+                    {/* Sticky Navigation */}
+                    <StickyNavigation
+                      sections={[
+                        { id: 'features', label: 'Features' },
+                        { id: 'testimonials', label: 'Stories' },
+                        { id: 'messaging', label: 'Messaging' },
+                        { id: 'pricing', label: 'Pricing' },
+                        { id: 'contact', label: 'Contact' }
+                      ]}
+                    />
 
                     {/* Main content */}
-                    <main>
+                    <main id="main-content">
                       <Hero />
                       <Features />
                       <Testimonials />
@@ -205,7 +222,10 @@ function App() {
                     </main>
 
                     {/* Footer */}
-                    <Footer />
+                    <Footer id="footer" />
+
+                    {/* Mobile Bottom Navigation */}
+                    <MobileBottomNavigation />
 
                     {/* Development tools */}
                     <ImagePerformanceMonitor />
