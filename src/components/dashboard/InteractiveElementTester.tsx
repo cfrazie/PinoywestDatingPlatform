@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Target, CheckCircle, AlertTriangle, Eye, 
-  MousePointer, Keyboard, Touch, Monitor
-} from 'lucide-react';
+import { Target, CheckCircle, AlertTriangle, Eye, MousePointer, Keyboard, Touchpad as Touch, Monitor } from 'lucide-react';
 import Button from '../ui/Button';
 
 interface ElementTest {
