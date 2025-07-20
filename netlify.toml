@@ -9,7 +9,7 @@
   for = "/*"
   [headers.values]
     # Security Headers
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mfyhaltgnrxxo5dsmfrwwltdn4rts43snzrxki32gy3hkmtr.apiii.co https://www.googletagmanager.com https://www.google-analytics.com https://static.hotjar.com https://script.hotjar.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://api.emailjs.com; frame-src 'self' https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mfyhaltgnrxxo5dsmfrwwltdn4rts43snzrxki32gy3hkmtr.apiii.co https://www.googletagmanager.com https://www.google-analytics.com https://static.hotjar.com https://script.hotjar.com https://tagmanager.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://api.emailjs.com https://www.googletagmanager.com; frame-src 'self' https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'self';"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"

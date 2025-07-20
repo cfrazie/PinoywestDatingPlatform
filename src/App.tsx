@@ -29,6 +29,7 @@ import AdminBackupSettings from './pages/admin/AdminBackupSettings';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCanceled from './pages/CheckoutCanceled';
 // import AdminRoute from './components/admin/AdminRoute';
+import { AnalyticsProvider } from './components/analytics/AnalyticsProvider';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
 import { validateEnvironment } from './lib/security';
 import { usePreloadCriticalImages } from './hooks/useImagePreloader';
@@ -138,81 +139,83 @@ function App() {
   return (
     <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
       <ErrorProvider>
-        <Router>
-          <div className="min-h-screen bg-white">
-            {/* Toast notifications */}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
-                  duration: 3000,
-                  iconTheme: {
-                    primary: '#10B981',
-                    secondary: '#fff',
-                  },
-                },
-                error: {
+        <AnalyticsProvider>
+          <Router>
+            <div className="min-h-screen bg-white">
+              {/* Toast notifications */}
+              <Toaster
+                position="top-right"
+                toastOptions={{
                   duration: 4000,
-                  iconTheme: {
-                    primary: '#EF4444',
-                    secondary: '#fff',
+                  style: {
+                    background: '#363636',
+                    color: '#fff',
                   },
-                },
-              }}
-            />
+                  success: {
+                    duration: 3000,
+                    iconTheme: {
+                      primary: '#10B981',
+                      secondary: '#fff',
+                    },
+                  },
+                  error: {
+                    duration: 4000,
+                    iconTheme: {
+                      primary: '#EF4444',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
 
-            <Routes>
-              <Route path="/checkout/success" element={<CheckoutSuccess />} />
-              <Route path="/checkout/canceled" element={<CheckoutCanceled />} />
-              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboard/*" element={<Dashboard />} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/security" element={<AdminSecuritySettings />} />
-              <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
-              <Route path="/admin/two-factor-setup" element={<AdminTwoFactorSetup />} />
-              <Route path="/admin/backup" element={<AdminBackupSettings />} />
-              
-              <Route path="/" element={
-                <>
-                  {/* Header */}
-                  <Header />
+              <Routes>
+                <Route path="/checkout/success" element={<CheckoutSuccess />} />
+                <Route path="/checkout/canceled" element={<CheckoutCanceled />} />
+                <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/*" element={<Dashboard />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/security" element={<AdminSecuritySettings />} />
+                <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+                <Route path="/admin/two-factor-setup" element={<AdminTwoFactorSetup />} />
+                <Route path="/admin/backup" element={<AdminBackupSettings />} />
+                
+                <Route path="/" element={
+                  <>
+                    {/* Header */}
+                    <Header />
 
-                  {/* Main content */}
-                  <main>
-                    <Hero />
-                    <Features />
-                    <Testimonials />
-                    <MessagingDemo />
-                    <VideoCallDemo />
-                    <PaymentDemo />
-                    <AdvancedSearchDemo />
-                    <CulturalProfilesDemo />
-                    <CulturalCalendar />
-                    <Pricing />
-                    <Newsletter />
-                    <Contact />
-                  </main>
+                    {/* Main content */}
+                    <main>
+                      <Hero />
+                      <Features />
+                      <Testimonials />
+                      <MessagingDemo />
+                      <VideoCallDemo />
+                      <PaymentDemo />
+                      <AdvancedSearchDemo />
+                      <CulturalProfilesDemo />
+                      <CulturalCalendar />
+                      <Pricing />
+                      <Newsletter />
+                      <Contact />
+                    </main>
 
-                  {/* Footer */}
-                  <Footer />
+                    {/* Footer */}
+                    <Footer />
 
-                  {/* Development tools */}
-                  <ImagePerformanceMonitor />
-                  <SecurityMonitor />
-                </>
-              } />
-            </Routes>
-          </div>
-        </Router>
+                    {/* Development tools */}
+                    <ImagePerformanceMonitor />
+                    <SecurityMonitor />
+                  </>
+                } />
+              </Routes>
+            </div>
+          </Router>
+        </AnalyticsProvider>
       </ErrorProvider>
     </ErrorBoundary>
   );

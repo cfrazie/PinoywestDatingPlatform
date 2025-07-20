@@ -8,10 +8,12 @@ import { curatedImages, imageDimensions } from '../../utils/imageOptimization';
 import { trackEventSecure } from '../../services/secureApi';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { useAnalytics } from '../analytics/AnalyticsProvider';
 
 const Hero: React.FC = () => {
   const { elementRef, isIntersecting } = useIntersectionObserver();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { trackEvent, trackUserInteraction } = useAnalytics();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -26,16 +28,19 @@ const Hero: React.FC = () => {
 
   const handleGetStarted = () => {
     trackEventSecure('hero_cta_clicked', { button: 'get_started' });
+    trackUserInteraction('click', 'hero_get_started_button');
     document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleWatchDemo = () => {
     trackEventSecure('hero_cta_clicked', { button: 'watch_demo' });
+    trackUserInteraction('click', 'hero_watch_demo_button');
     
     // Simulate opening a demo video
     const confirmed = confirm('Would you like to watch our platform demo video? (This would open a video modal in production)');
     if (confirmed) {
       console.log('Demo video would start playing...');
+      trackEvent('demo_video_started', { source: 'hero_section' });
       // In production, this would open a video modal or redirect to a demo page
       alert('🎥 Demo video starting! This would show you how our platform works.');
     }

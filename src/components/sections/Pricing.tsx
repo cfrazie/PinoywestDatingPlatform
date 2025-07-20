@@ -6,11 +6,13 @@ import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { redirectToCheckout } from '../../lib/stripe';
 import { stripeProducts } from '../../stripe-config';
 import { trackEventSecure } from '../../services/secureApi'; 
+import { useAnalytics } from '../analytics/AnalyticsProvider';
 
 const Pricing: React.FC = () => {
   const { elementRef, isIntersecting } = useIntersectionObserver();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const { trackEvent, trackConversion } = useAnalytics();
 
   // Basic plan (free tier)
   const basicPlan = {
@@ -156,8 +158,16 @@ const Pricing: React.FC = () => {
       plan_name: planName 
     });
     
+    trackEvent('plan_selected', {
+      plan_id: planId,
+      plan_name: planName,
+      billing_cycle: billingCycle,
+      price_id: priceId
+    });
+    
     // If it's the free basic plan, just show a message
     if (planId === 'basic') {
+      trackConversion('free_plan_signup');
       alert('🎉 Welcome to PinoyWest! Your free Basic plan is ready to use!');
       return;
     }
@@ -171,9 +181,18 @@ const Pricing: React.FC = () => {
     try {
       setIsLoading(planId);
       console.log(`Initiating checkout for plan: ${planName} with priceId: ${priceId}`);
+      trackEvent('checkout_initiated', {
+        plan_id: planId,
+        plan_name: planName,
+        price_id: priceId
+      });
       await redirectToCheckout(priceId);
     } catch (error) {
       console.error('Error during checkout:', error);
+      trackEvent('checkout_error', {
+        plan_id: planId,
+        error_message: error instanceof Error ? error.message : 'Unknown error'
+      });
       setError('There was an error processing your request. Please try again.');
     } finally {
       setIsLoading(null);

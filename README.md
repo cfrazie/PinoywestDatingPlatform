@@ -165,6 +165,7 @@ npm run test:ui
 
 ### Built-in Analytics
 - Page views and user interactions
+- Google Tag Manager integration with comprehensive event tracking
 - Form submissions and conversions
 - Newsletter subscriptions
 - Error tracking and performance metrics
@@ -172,6 +173,8 @@ npm run test:ui
 
 ### External Integrations
 - Google Analytics (optional)
+- Google Tag Manager (GTM-TNRNVD42)
+- Google Tag Manager for advanced tracking
 - Hotjar for user behavior (optional)
 - Sentry for error monitoring (optional)
 
