@@ -26,8 +26,8 @@ html {
 }
 
 /* Focus styles
-   NOTE: previously there was a global `*:focus { outline: none; }` which removes focus
-   outlines and harms keyboard users. Replace with :focus-visible so keyboard users
+   NOTE: previously there was a global `*:focus { outline: none; }` which removed focus
+   outlines and harmed keyboard users. Replaced with :focus-visible so keyboard users
    still see a clear focus indicator while mouse users are not impacted.
 */
 :focus-visible {
