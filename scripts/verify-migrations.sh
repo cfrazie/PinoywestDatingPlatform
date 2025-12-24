@@ -19,10 +19,12 @@ if ! command -v supabase &> /dev/null; then
     echo "Installing Supabase CLI..."
     
     # Install Supabase CLI
+    # Note: In production, verify checksums or use package managers
     if command -v brew &> /dev/null; then
         brew install supabase/tap/supabase
     else
         # For Linux/CI environments
+        # WARNING: Installing from remote URL - verify source before use
         curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz
         sudo mv supabase /usr/local/bin/
     fi
@@ -141,7 +143,7 @@ echo -e "${GREEN}✓${NC} Schema verification passed"
 
 # Check for duplicate/redundant migrations
 echo -e "${YELLOW}Checking for migration issues...${NC}"
-MIGRATION_COUNT=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)
+MIGRATION_COUNT=$(find supabase/migrations -name '*.sql' -type f 2>/dev/null | wc -l)
 echo "Total migrations: $MIGRATION_COUNT"
 
 # Clean up

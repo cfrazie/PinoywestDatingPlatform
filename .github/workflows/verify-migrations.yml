@@ -44,7 +44,7 @@ jobs:
       - name: Run all migrations
         run: |
           cd ${{ github.workspace }}
-          supabase db reset --db-url "$(supabase status -o env | grep DATABASE_URL | cut -d'=' -f2)"
+          supabase db reset
         continue-on-error: false
 
       - name: Verify schema types

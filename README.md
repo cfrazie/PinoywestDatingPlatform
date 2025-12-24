@@ -1,177 +1,277 @@
-# Supabase CLI
+# PinoyWest Landing Page
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+A comprehensive full-stack landing page for a Filipino-Western dating platform built with React, TypeScript, and Supabase.
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+## 🚀 Features
 
-This repository contains all the functionality for Supabase CLI.
+### Frontend
+- **Modern React Architecture**: Built with React 18, TypeScript, and Vite
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Smooth Animations**: Framer Motion for engaging user interactions
+- **Optimized Images**: Advanced image optimization with lazy loading and responsive images
+- **SEO Optimized**: Meta tags, semantic HTML, and performance optimizations
+- **Accessibility**: WCAG 2.1 compliant with proper ARIA labels
+- **Form Validation**: Zod schema validation with custom hooks
+- **Error Handling**: Comprehensive error boundaries and loading states
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+### Backend (Supabase)
+- **Database**: PostgreSQL with Row Level Security (RLS)
+- **Authentication**: Built-in user management
+- **Real-time**: Live updates and notifications
+- **API**: Auto-generated REST and GraphQL APIs
+- **Storage**: File uploads and management
+- **Edge Functions**: Serverless functions for custom logic
 
-## Getting started
+### Key Sections
+1. **Hero Section**: Compelling value proposition with animated elements
+2. **Features**: Comprehensive platform capabilities showcase
+3. **Testimonials**: Social proof with verified user stories
+4. **Pricing**: Flexible plans with billing toggle
+5. **Newsletter**: Email subscription with benefits
+6. **Contact**: Multi-channel contact form and information
 
-### Install the CLI
+## 🛠️ Tech Stack
 
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, Framer Motion
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Forms**: React Hook Form, Zod validation
+- **Icons**: Lucide React
+- **Notifications**: React Hot Toast
+- **Testing**: Vitest, Testing Library
+- **Deployment**: Netlify (Frontend), Supabase (Backend)
+- **Error Handling**: Comprehensive error boundary system with offline support
+- **Monitoring**: Real-time error logging and analytics
 
+## 📦 Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd pinoywest-landing
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Fill in your Supabase credentials and other configuration values.
+
+4. **Set up Supabase**
+   - Create a new Supabase project
+   - Run the database migrations (see Database Setup section)
+   - Update your `.env` file with the project URL and anon key
+
+5. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+## 🗄️ Database Setup
+
+### Automated Migration Setup (Recommended)
+
+The project uses Supabase migrations for database schema management. All migrations are located in `supabase/migrations/`.
+
+**Quick Start:**
+
+1. Install Supabase CLI:
+   ```bash
+   # macOS
+   brew install supabase/tap/supabase
+   
+   # Linux
+   curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz
+   sudo mv supabase /usr/local/bin/
+   ```
+
+2. Start local Supabase instance (requires Docker):
+   ```bash
+   supabase start
+   ```
+
+3. Migrations will be applied automatically!
+
+**Access your local database:**
+- Studio UI: `http://localhost:54323`
+- Database URL: `postgresql://postgres:postgres@localhost:54322/postgres`
+
+**For detailed migration instructions, see:** [`docs/DATABASE_MIGRATIONS.md`](docs/DATABASE_MIGRATIONS.md)
+
+### Schema Overview
+
+The database includes tables for:
+- **User Profiles & Authentication** - UUID-based user management
+- **Analytics Events** - User behavior tracking with `user_id` (UUID) references
+- **Contact Submissions** - Customer inquiries
+- **Newsletter Subscriptions** - Email marketing
+- **Messaging & Chat** - Real-time communication
+- **Video Calls** - Call records and scheduling
+- **Payments & Subscriptions** - Stripe integration
+- **Cultural Features** - Cultural learning and compatibility
+
+All migrations are:
+- ✅ Idempotent (safe to run multiple times)
+- ✅ Type-verified (analytics_events.user_id matches auth.users.id as UUID)
+- ✅ Tested in CI/CD pipeline
+- ✅ Include proper indexes and RLS policies
+
+### Manual Schema Setup (Legacy Reference)
+
+For reference, the initial schema can be found in `supabase/migrations/20250628220633_billowing_dawn.sql`. Using the Supabase CLI is strongly recommended for consistency.
+
+## 🧪 Testing
+
+Run the test suite:
 ```bash
-npm i supabase --save-dev
+npm run test
 ```
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
-
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
-
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
-
-<details>
-  <summary><b>macOS</b></summary>
-
-  Available via [Homebrew](https://brew.sh). To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Windows</b></summary>
-
-  Available via [Scoop](https://scoop.sh). To install:
-
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
-
+Run tests with UI:
 ```bash
-supabase bootstrap
+npm run test:ui
 ```
 
-Or using npx:
+## 🚀 Deployment
 
-```bash
-npx supabase bootstrap
+### Frontend (Netlify)
+1. Connect your repository to Netlify
+2. Set build command: `npm run build`
+3. Set publish directory: `dist`
+4. Add environment variables in Netlify dashboard
+
+### Backend (Supabase)
+1. Database and APIs are automatically deployed
+2. Set up custom domain if needed
+3. Configure email templates
+4. Set up webhooks for integrations
+
+## 📊 Analytics & Monitoring
+
+### Built-in Analytics
+- Page views and user interactions
+- Google Tag Manager integration with comprehensive event tracking
+- Form submissions and conversions
+- Newsletter subscriptions
+- Error tracking and performance metrics
+- Image loading performance monitoring (development mode)
+
+### External Integrations
+- Google Analytics (optional)
+- Google Tag Manager (GTM-TNRNVD42)
+- Google Tag Manager for advanced tracking
+- Hotjar for user behavior (optional)
+- Sentry for error monitoring (optional)
+
+## 🔒 Security Features
+
+- **Input Sanitization**: All user inputs are validated and sanitized
+- **HTTPS Enforcement**: SSL certificates and secure headers
+- **Rate Limiting**: API rate limiting to prevent abuse
+- **CORS Configuration**: Proper cross-origin resource sharing
+- **Environment Variables**: Sensitive data stored securely
+- **Row Level Security**: Database-level access control
+- **Error Handling**: Secure error logging without exposing sensitive data
+- **Offline Support**: Graceful degradation when offline
+
+## 🎨 Customization
+
+### Colors and Branding
+Update the color palette in `tailwind.config.js`:
+```javascript
+theme: {
+  extend: {
+    colors: {
+      primary: {
+        50: '#eff6ff',
+        500: '#3b82f6',
+        900: '#1e3a8a',
+      }
+    }
+  }
+}
 ```
 
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+### Content Management
+- Update text content in component files
+- Replace images with your own assets
+- Modify testimonials and pricing plans
+- Customize contact information
 
-## Docs
+## 📈 Performance Optimization
 
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+- **Code Splitting**: Automatic route-based code splitting
+- **Advanced Image Optimization**: 
+  - Responsive images with srcSet and sizes
+  - Lazy loading with intersection observer
+  - WebP format detection and optimization
+  - Critical image preloading
+  - Performance monitoring in development
+- **Lazy Loading**: Components and images loaded on demand
+- **Bundle Analysis**: Use `npm run build` to analyze bundle size
+- **Caching**: Proper HTTP caching headers
+- **CDN**: Static assets served via CDN
+- **Error Recovery**: Automatic retry mechanisms with exponential backoff
+- **Circuit Breakers**: Prevent cascading failures in API calls
+- **Offline Caching**: Smart caching for offline functionality
 
-## Breaking changes
+### Image Optimization Features
+- **Automatic Format Detection**: WebP support with JPEG fallback
+- **Responsive Images**: Multiple sizes generated automatically
+- **Lazy Loading**: Images load only when entering viewport
+- **Critical Image Preloading**: Hero and above-the-fold images load immediately
+- **Performance Monitoring**: Real-time metrics in development (Ctrl+Shift+I)
+- **Error Handling**: Graceful fallbacks for failed image loads
+- **Progressive Enhancement**: Blur placeholders while loading
+- **Global Error Boundary**: Catches and handles React component errors
+- **Network Error Recovery**: Automatic retry with exponential backoff
+- **Offline Queue**: Actions are queued when offline and executed when back online
+- **User-Friendly Messages**: Technical errors converted to user-friendly language
+- **Error Analytics**: Comprehensive error logging and monitoring dashboard
+- **Validation Errors**: Real-time form validation with helpful error messages
+- **Circuit Breakers**: Prevent system overload during high error rates
+- **Graceful Degradation**: App continues to function even when some services fail
 
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+## 🤝 Contributing
 
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Commit changes: `git commit -am 'Add new feature'`
+4. Push to branch: `git push origin feature/new-feature`
+5. Submit a pull request
 
-## Developing
+## 📝 License
 
-To run from source:
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-```sh
-# Go >= 1.22
-go run . help
-```
+## 🆘 Support
+
+For support and questions:
+- Email: support@pinoywest.com
+- Documentation: [Link to docs]
+- Issues: [GitHub Issues]
+
+## 🔄 Maintenance Guidelines
+
+### Regular Updates
+- Update dependencies monthly
+- Monitor security vulnerabilities
+- Review and update content quarterly
+- Backup database regularly
+
+### Performance Monitoring
+- Monitor Core Web Vitals
+- Track conversion rates
+- Analyze user feedback
+- Review error logs weekly
+
+### SEO Maintenance
+- Update meta descriptions
+- Monitor search rankings
+- Add new content regularly
+- Optimize for new keywords
