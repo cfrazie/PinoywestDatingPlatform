@@ -75,22 +75,30 @@ export const subscribeToNewsletter = async (data: NewsletterData): Promise<ApiRe
 // Analytics tracking
 export const trackEvent = async (eventType: string, eventData?: any): Promise<void> => {
   try {
+    // If supabase is not configured (shouldn't happen after the fail-fast change),
+    // log events locally for dev/demo runs.
     if (!supabase) {
-      // Log to console for demo
-      console.log('Analytics event:', eventType, eventData);
+      console.log('Analytics event (dev):', eventType, eventData);
       return;
     }
 
-    await supabase
+    // Get session and user id using the Supabase client API
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id ?? null;
+
+    const { error } = await supabase
       .from('analytics_events')
       .insert({
-        user_id: auth.uid() || null,
-        user_id: auth.uid() || null,
+        user_id: userId,
         event_type: eventType,
         event_data: eventData,
-        user_agent: navigator.userAgent,
-        ip_address: 'client-side' // In production, this would be handled server-side
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        ip_address: 'client-side' // In production, set server-side or omit
       });
+
+    if (error) {
+      console.error('Failed to insert analytics event:', error);
+    }
   } catch (error) {
     console.error('Analytics tracking error:', error);
   }
