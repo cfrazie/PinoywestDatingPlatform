@@ -75,12 +75,6 @@ export const subscribeToNewsletter = async (data: NewsletterData): Promise<ApiRe
 // Analytics tracking
 export const trackEvent = async (eventType: string, eventData?: any): Promise<void> => {
   try {
-    // Dev fallback: if supabase is not configured, log locally and return
-    if (!supabase) {
-      console.log('Analytics event (dev mode):', eventType, eventData);
-      return;
-    }
-
     // Get current user's id using supabase.auth.getSession()
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id || null;
