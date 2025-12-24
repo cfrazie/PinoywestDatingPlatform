@@ -1,8 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { submitContactForm, subscribeToNewsletter } from '../api';
+
+// Mock environment variables before any imports
+vi.stubGlobal('import.meta', {
+  env: {
+    VITE_SUPABASE_URL: 'https://test.supabase.co',
+    VITE_SUPABASE_ANON_KEY: 'test-key',
+    DEV: true
+  }
+});
 
 // Mock Supabase
-vi.mock('../lib/supabase', () => ({
+vi.mock('../../lib/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       insert: vi.fn(() => ({ error: null })),
@@ -11,9 +19,17 @@ vi.mock('../lib/supabase', () => ({
           single: vi.fn(() => ({ data: null, error: null }))
         }))
       }))
-    }))
+    })),
+    auth: {
+      getSession: vi.fn(() => Promise.resolve({ 
+        data: { session: null },
+        error: null 
+      }))
+    }
   }
 }));
+
+import { submitContactForm, subscribeToNewsletter } from '../api';
 
 describe('API Services', () => {
   beforeEach(() => {
