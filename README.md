@@ -74,66 +74,56 @@ A comprehensive full-stack landing page for a Filipino-Western dating platform b
 
 ## 🗄️ Database Setup
 
-### Required Tables
+### Automated Migration Setup (Recommended)
 
-1. **contact_submissions**
-   ```sql
-   CREATE TABLE contact_submissions (
-     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-     name TEXT NOT NULL,
-     email TEXT NOT NULL,
-     subject TEXT NOT NULL,
-     message TEXT NOT NULL,
-     status TEXT DEFAULT 'new' CHECK (status IN ('new', 'read', 'responded')),
-     created_at TIMESTAMPTZ DEFAULT NOW()
-   );
+The project uses Supabase migrations for database schema management. All migrations are located in `supabase/migrations/`.
+
+**Quick Start:**
+
+1. Install Supabase CLI:
+   ```bash
+   # macOS
+   brew install supabase/tap/supabase
    
-   ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
+   # Linux
+   curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz
+   sudo mv supabase /usr/local/bin/
    ```
 
-2. **newsletter_subscriptions**
-   ```sql
-   CREATE TABLE newsletter_subscriptions (
-     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-     email TEXT UNIQUE NOT NULL,
-     active BOOLEAN DEFAULT true,
-     subscribed_at TIMESTAMPTZ DEFAULT NOW()
-   );
-   
-   ALTER TABLE newsletter_subscriptions ENABLE ROW LEVEL SECURITY;
+2. Start local Supabase instance (requires Docker):
+   ```bash
+   supabase start
    ```
 
-3. **analytics_events**
-   ```sql
-   CREATE TABLE analytics_events (
-     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-     event_type TEXT NOT NULL,
-     event_data JSONB,
-     user_agent TEXT,
-     ip_address TEXT,
-     created_at TIMESTAMPTZ DEFAULT NOW()
-   );
-   
-   ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
-   ```
+3. Migrations will be applied automatically!
 
-### Row Level Security Policies
+**Access your local database:**
+- Studio UI: `http://localhost:54323`
+- Database URL: `postgresql://postgres:postgres@localhost:54322/postgres`
 
-```sql
--- Allow public to insert contact forms and newsletter subscriptions
-CREATE POLICY "Allow public contact submissions" ON contact_submissions
-  FOR INSERT TO anon WITH CHECK (true);
+**For detailed migration instructions, see:** [`docs/DATABASE_MIGRATIONS.md`](docs/DATABASE_MIGRATIONS.md)
 
-CREATE POLICY "Allow public newsletter subscriptions" ON newsletter_subscriptions
-  FOR INSERT TO anon WITH CHECK (true);
+### Schema Overview
 
-CREATE POLICY "Allow public analytics events" ON analytics_events
-  FOR INSERT TO anon WITH CHECK (true);
+The database includes tables for:
+- **User Profiles & Authentication** - UUID-based user management
+- **Analytics Events** - User behavior tracking with `user_id` (UUID) references
+- **Contact Submissions** - Customer inquiries
+- **Newsletter Subscriptions** - Email marketing
+- **Messaging & Chat** - Real-time communication
+- **Video Calls** - Call records and scheduling
+- **Payments & Subscriptions** - Stripe integration
+- **Cultural Features** - Cultural learning and compatibility
 
--- Allow authenticated users to read their own data
-CREATE POLICY "Users can read own contact submissions" ON contact_submissions
-  FOR SELECT TO authenticated USING (auth.email() = email);
-```
+All migrations are:
+- ✅ Idempotent (safe to run multiple times)
+- ✅ Type-verified (analytics_events.user_id matches auth.users.id as UUID)
+- ✅ Tested in CI/CD pipeline
+- ✅ Include proper indexes and RLS policies
+
+### Manual Schema Setup (Not Recommended)
+
+If you prefer to set up the schema manually, refer to the migration files in `supabase/migrations/`. However, using the Supabase CLI is strongly recommended for consistency.
 
 ## 🧪 Testing
 
