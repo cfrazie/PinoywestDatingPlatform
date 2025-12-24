@@ -88,7 +88,7 @@ export const trackEvent = async (eventType: string, eventData?: any): Promise<vo
     await supabase
       .from('analytics_events')
       .insert({
-        user_id: userId, // Fixed: removed duplicate user_id field
+        user_id: userId, // Fixed: use getSession() instead of undefined auth.uid(), removed duplicate user_id
         event_type: eventType,
         event_data: eventData,
         user_agent: navigator.userAgent,

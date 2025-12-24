@@ -6,7 +6,10 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Fail-fast: Throw error if environment variables are missing to prevent runtime TypeErrors
 // This ensures code that assumes supabase is not null will fail early with a clear message
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase env vars: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required.');
+  const missing = [];
+  if (!supabaseUrl) missing.push('VITE_SUPABASE_URL');
+  if (!supabaseAnonKey) missing.push('VITE_SUPABASE_ANON_KEY');
+  throw new Error(`Missing Supabase env vars: ${missing.join(', ')} ${missing.length > 1 ? 'are' : 'is'} required.`);
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
