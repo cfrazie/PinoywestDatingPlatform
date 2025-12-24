@@ -75,17 +75,20 @@ export const subscribeToNewsletter = async (data: NewsletterData): Promise<ApiRe
 // Analytics tracking
 export const trackEvent = async (eventType: string, eventData?: any): Promise<void> => {
   try {
+    // Defensive fallback: log locally and return early if supabase is not configured
     if (!supabase) {
-      // Log to console for demo
-      console.log('Analytics event:', eventType, eventData);
+      console.log('Analytics event (local):', eventType, eventData);
       return;
     }
+
+    // Use getSession to obtain the current user id instead of undefined auth helper
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id || null;
 
     await supabase
       .from('analytics_events')
       .insert({
-        user_id: auth.uid() || null,
-        user_id: auth.uid() || null,
+        user_id: userId, // Fixed: removed duplicate user_id field
         event_type: eventType,
         event_data: eventData,
         user_agent: navigator.userAgent,

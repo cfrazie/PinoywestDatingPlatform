@@ -85,7 +85,8 @@ CREATE POLICY "Admins can read all contact submissions" ON public.contact_submis
     EXISTS (
       SELECT 1 FROM auth.users 
       WHERE auth.users.id = auth.uid() 
-      AND auth.users.email IN ('admin@pinoywest.com', 'support@pinoywest.com''christopher@pinoywest.com')
+      -- Fixed: Added missing comma and removed stray quote in admin email IN list
+      AND auth.users.email IN ('admin@pinoywest.com', 'support@pinoywest.com', 'christopher@pinoywest.com')
     )
   );
 
@@ -94,6 +95,7 @@ CREATE POLICY "Admins can update contact submissions" ON public.contact_submissi
     EXISTS (
       SELECT 1 FROM auth.users 
       WHERE auth.users.id = auth.uid() 
-      AND auth.users.email IN ('admin@pinoywest.com', 'support@pinoywest.com' 'christopher@pinoywest.com')
+      -- Fixed: Added missing comma in admin email IN list
+      AND auth.users.email IN ('admin@pinoywest.com', 'support@pinoywest.com', 'christopher@pinoywest.com')
     )
   )
