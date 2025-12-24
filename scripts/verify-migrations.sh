@@ -143,6 +143,10 @@ echo -e "${GREEN}✓${NC} Schema verification passed"
 
 # Check for duplicate/redundant migrations
 echo -e "${YELLOW}Checking for migration issues...${NC}"
+if [ ! -d "supabase/migrations" ]; then
+    echo -e "${RED}❌ Migration directory not found${NC}"
+    exit 1
+fi
 MIGRATION_COUNT=$(find supabase/migrations -name '*.sql' -type f 2>/dev/null | wc -l)
 echo "Total migrations: $MIGRATION_COUNT"
 
