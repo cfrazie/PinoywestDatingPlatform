@@ -186,10 +186,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <button 
                 className="relative p-2 text-gray-400 hover:text-gray-600"
                 onClick={() => {
-                  console.log('Notifications clicked');
-                  alert('Notifications panel would open');
+                  // TODO: Open notifications panel
                 }}
                 data-testid="notifications-bell"
+                aria-label="Notifications"
               >
                 <Bell className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
@@ -197,10 +197,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <button 
                 className="p-2 text-gray-400 hover:text-gray-600"
                 onClick={() => {
-                  console.log('Gifts clicked');
-                  alert('Gifts panel would open');
+                  // TODO: Open gifts panel
                 }}
                 data-testid="gifts-button"
+                aria-label="Gifts"
               >
                 <Gift className="w-5 h-5" />
               </button>
