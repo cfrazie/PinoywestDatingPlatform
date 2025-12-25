@@ -124,6 +124,8 @@ CREATE POLICY "System can manage recommendations cache"
   WITH CHECK (true);
 
 -- Function to update ML training data from interactions
+-- NOTE: This trigger executes on every interaction insert. For high-traffic production
+-- environments, consider implementing a background job or batching mechanism instead.
 CREATE OR REPLACE FUNCTION update_ml_training_data()
 RETURNS TRIGGER
 LANGUAGE plpgsql

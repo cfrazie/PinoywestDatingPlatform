@@ -171,26 +171,26 @@ BEGIN
     
     -- Only adjust if we have enough data
     IF v_success_rate IS NOT NULL THEN
-      -- Adjust weight based on success rate
+      -- Adjust weight based on success rate with bounds checking
       IF v_success_rate > 0.7 THEN
-        -- This factor is highly predictive, increase weight
-        v_new_weight := v_factor.weight * 1.2;
+        -- This factor is highly predictive, increase weight (max 3.0)
+        v_new_weight := LEAST(v_factor.weight * 1.2, 3.0);
         
         INSERT INTO user_dynamic_weights (user_id, factor_id, base_weight, adjusted_weight, adjustment_reason)
         VALUES (p_user_id, v_factor.id, v_factor.weight, v_new_weight, 'High predictive success')
         ON CONFLICT (user_id, factor_id) DO UPDATE
-        SET adjusted_weight = v_new_weight,
+        SET adjusted_weight = LEAST(user_dynamic_weights.adjusted_weight * 1.2, 3.0),
             last_adjusted = NOW(),
             adjustment_count = user_dynamic_weights.adjustment_count + 1;
             
       ELSIF v_success_rate < 0.3 THEN
-        -- This factor isn't predictive for this user, decrease weight
-        v_new_weight := v_factor.weight * 0.8;
+        -- This factor isn't predictive for this user, decrease weight (min 0.1)
+        v_new_weight := GREATEST(v_factor.weight * 0.8, 0.1);
         
         INSERT INTO user_dynamic_weights (user_id, factor_id, base_weight, adjusted_weight, adjustment_reason)
         VALUES (p_user_id, v_factor.id, v_factor.weight, v_new_weight, 'Low predictive success')
         ON CONFLICT (user_id, factor_id) DO UPDATE
-        SET adjusted_weight = v_new_weight,
+        SET adjusted_weight = GREATEST(user_dynamic_weights.adjusted_weight * 0.8, 0.1),
             last_adjusted = NOW(),
             adjustment_count = user_dynamic_weights.adjustment_count + 1;
       END IF;

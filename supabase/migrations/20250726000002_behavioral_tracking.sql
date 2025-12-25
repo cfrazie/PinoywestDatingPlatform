@@ -159,11 +159,15 @@ BEGIN
   WHERE user_id = p_user_id;
   
   -- Calculate weighted engagement score (0-100)
+  -- Sessions: 10 points per session/week, capped at 30 (3+ sessions)
+  -- Duration: 2 points per minute, capped at 20 (10+ minutes)
+  -- Like rate: 25 points for 100% rate
+  -- Response rate: 25 points for 100% rate
   v_engagement_score := LEAST(100, GREATEST(0,
-    (COALESCE(v_sessions_per_week, 0) * 10) + -- Max 30 points for 3+ sessions/week
-    (COALESCE(v_avg_session_duration, 0) / 60.0 * 2) + -- Max 20 points for 10+ min sessions
-    (COALESCE(v_like_rate, 0) * 25) + -- Max 25 points for high like rate
-    (COALESCE(v_message_response_rate, 0) * 25) -- Max 25 points for high response rate
+    LEAST(COALESCE(v_sessions_per_week, 0) * 10, 30) +
+    LEAST(COALESCE(v_avg_session_duration, 0) / 60.0 * 2, 20) +
+    (COALESCE(v_like_rate, 0) * 25) +
+    (COALESCE(v_message_response_rate, 0) * 25)
   ));
   
   RETURN v_engagement_score;

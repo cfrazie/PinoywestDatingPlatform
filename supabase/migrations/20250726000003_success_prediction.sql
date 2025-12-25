@@ -162,12 +162,12 @@ BEGIN
   WHERE (user_id = p_user_id AND target_user_id = p_target_user_id)
      OR (user_id = p_target_user_id AND target_user_id = p_user_id);
   
-  -- Calculate behavioral compatibility
+  -- Calculate behavioral compatibility (similarity based on engagement difference)
+  -- Lower difference = higher similarity (0-1 scale)
   v_behavioral_score := COALESCE(
-    ABS(v_user_engagement - v_target_engagement) / 100.0,
+    1.0 - LEAST(ABS(v_user_engagement - v_target_engagement) / 100.0, 1.0),
     0.5
   );
-  v_behavioral_score := 1.0 - v_behavioral_score; -- Convert difference to similarity
   
   -- Default values for missing data
   v_compatibility_score := COALESCE(v_compatibility_score, 50.0);

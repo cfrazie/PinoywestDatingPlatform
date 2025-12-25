@@ -99,10 +99,21 @@ CREATE POLICY "Users can read their own A/B assignments"
   TO authenticated 
   USING (auth.uid() = user_id);
 
-CREATE POLICY "System can manage A/B assignments" 
-  ON ab_test_assignments FOR ALL 
+CREATE POLICY "System can insert A/B assignments" 
+  ON ab_test_assignments FOR INSERT 
   TO authenticated 
   WITH CHECK (true);
+
+CREATE POLICY "Admins can manage A/B assignments" 
+  ON ab_test_assignments FOR UPDATE 
+  TO authenticated 
+  USING (
+    EXISTS (
+      SELECT 1 FROM admin_users 
+      WHERE id = auth.uid() 
+      AND is_active = true
+    )
+  );
 
 CREATE POLICY "Admins can read A/B test results" 
   ON ab_test_results FOR SELECT 

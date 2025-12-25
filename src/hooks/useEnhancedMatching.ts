@@ -117,6 +117,19 @@ export const useEnhancedMatching = (userId: string) => {
     }
   }, [userId]);
 
+  // Generate UUID (cross-browser compatible)
+  const generateUUID = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    // Fallback UUID v4 generation
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
   // Track user interaction
   const trackInteraction = useCallback(async (
     targetUserId: string,
@@ -130,7 +143,7 @@ export const useEnhancedMatching = (userId: string) => {
         target_user_id: targetUserId,
         interaction_type: interactionType,
         interaction_context: context || {},
-        session_id: sessionId || crypto.randomUUID(),
+        session_id: sessionId || generateUUID(),
         created_at: new Date().toISOString()
       });
 

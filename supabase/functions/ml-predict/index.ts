@@ -32,7 +32,7 @@ serve(async (req) => {
       throw new Error('Not authenticated');
     }
 
-    const { userId, targetUserId, predictionType = 'all' } = await req.json();
+    const { userId, targetUserId } = await req.json();
 
     // Validate input
     if (!userId || !targetUserId) {
