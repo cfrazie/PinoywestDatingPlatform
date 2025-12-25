@@ -9,14 +9,8 @@ export default defineConfig({
   },
   build: {
     // Remove console logs in production for better security and performance
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
-    // Improve build performance
+    minify: 'esbuild',
+    // Improve build performance with code splitting
     rollupOptions: {
       output: {
         manualChunks: {
@@ -25,5 +19,9 @@ export default defineConfig({
         },
       },
     },
+  },
+  esbuild: {
+    // Remove console logs and debugger statements in production
+    drop: ['console', 'debugger'],
   },
 });
