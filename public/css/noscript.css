@@ -1,0 +1,5 @@
+/* Styles for Google Tag Manager noscript iframe */
+.gtm-noscript-iframe {
+  display: none;
+  visibility: hidden;
+}
