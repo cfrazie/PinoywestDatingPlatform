@@ -33,6 +33,7 @@ import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCanceled from './pages/CheckoutCanceled';
 import DashboardTesting from './pages/DashboardTesting';
 import { LiveStreamPage } from './components/LiveStream/LiveStreamPage';
+import LiveStreamBrowsePage from './pages/LiveStreamBrowse';
 // import AdminRoute from './components/admin/AdminRoute';
 import { AnalyticsProvider } from './components/analytics/AnalyticsProvider';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
@@ -185,6 +186,7 @@ function App() {
                 <Route path="/dashboard-testing" element={<DashboardTesting />} />
                 
                 {/* Live Stream Routes */}
+                <Route path="/live" element={<LiveStreamBrowsePage />} />
                 <Route path="/live/:streamId" element={<LiveStreamPage />} />
                 
                 {/* Admin Routes */}
