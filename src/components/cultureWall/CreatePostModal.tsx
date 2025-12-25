@@ -59,7 +59,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ onClose, onPos
         content: content.trim(),
         post_type: postType,
         media_urls: mediaUrls.length > 0 ? mediaUrls : undefined,
-        category: category || undefined,
+        category: (category || undefined) as any,
         hashtags: hashtags.length > 0 ? hashtags : undefined,
         visibility,
       };
