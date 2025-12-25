@@ -32,6 +32,7 @@ import AdminBackupSettings from './pages/admin/AdminBackupSettings';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCanceled from './pages/CheckoutCanceled';
 import DashboardTesting from './pages/DashboardTesting';
+import { LiveStreamPage } from './components/LiveStream/LiveStreamPage';
 // import AdminRoute from './components/admin/AdminRoute';
 import { AnalyticsProvider } from './components/analytics/AnalyticsProvider';
 import { trackEventSecure, initializeSecurity } from './services/secureApi';
@@ -182,6 +183,9 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/*" element={<Dashboard />} />
                 <Route path="/dashboard-testing" element={<DashboardTesting />} />
+                
+                {/* Live Stream Routes */}
+                <Route path="/live/:streamId" element={<LiveStreamPage />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<AdminLogin />} />

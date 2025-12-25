@@ -79,6 +79,110 @@ export interface Database {
           ip_address?: string;
         };
       };
+      live_streams: {
+        Row: {
+          id: string;
+          host_id: string;
+          title: string;
+          status: 'idle' | 'starting' | 'live' | 'ended' | 'error';
+          created_at: string;
+          ended_at: string | null;
+          max_participants: number;
+          viewer_count: number;
+          layout_type: 'grid' | 'spotlight';
+          spotlight_user_id: string | null;
+        };
+        Insert: {
+          host_id: string;
+          title: string;
+          status?: 'idle' | 'starting' | 'live' | 'ended' | 'error';
+          max_participants?: number;
+          viewer_count?: number;
+          layout_type?: 'grid' | 'spotlight';
+          spotlight_user_id?: string | null;
+        };
+        Update: {
+          title?: string;
+          status?: 'idle' | 'starting' | 'live' | 'ended' | 'error';
+          ended_at?: string | null;
+          max_participants?: number;
+          viewer_count?: number;
+          layout_type?: 'grid' | 'spotlight';
+          spotlight_user_id?: string | null;
+        };
+      };
+      stream_participants: {
+        Row: {
+          id: string;
+          stream_id: string;
+          user_id: string;
+          username: string;
+          avatar_url: string | null;
+          role: 'host' | 'participant';
+          is_muted: boolean;
+          is_video_enabled: boolean;
+          is_minimized: boolean;
+          joined_at: string;
+          left_at: string | null;
+        };
+        Insert: {
+          stream_id: string;
+          user_id: string;
+          username: string;
+          avatar_url?: string | null;
+          role?: 'host' | 'participant';
+          is_muted?: boolean;
+          is_video_enabled?: boolean;
+          is_minimized?: boolean;
+        };
+        Update: {
+          is_muted?: boolean;
+          is_video_enabled?: boolean;
+          is_minimized?: boolean;
+          left_at?: string | null;
+        };
+      };
+      stream_layout_state: {
+        Row: {
+          stream_id: string;
+          spotlight_user_id: string | null;
+          layout_type: 'grid' | 'spotlight';
+          updated_at: string;
+        };
+        Insert: {
+          stream_id: string;
+          spotlight_user_id?: string | null;
+          layout_type?: 'grid' | 'spotlight';
+        };
+        Update: {
+          spotlight_user_id?: string | null;
+          layout_type?: 'grid' | 'spotlight';
+          updated_at?: string;
+        };
+      };
+      stream_chat: {
+        Row: {
+          id: string;
+          stream_id: string;
+          user_id: string;
+          username: string;
+          avatar_url: string | null;
+          message: string;
+          timestamp: string;
+          is_host: boolean;
+        };
+        Insert: {
+          stream_id: string;
+          user_id: string;
+          username: string;
+          avatar_url?: string | null;
+          message: string;
+          is_host?: boolean;
+        };
+        Update: {
+          message?: string;
+        };
+      };
     };
   };
 }
