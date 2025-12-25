@@ -48,3 +48,7 @@ export interface LoadingState {
   isLoading: boolean;
   error: string | null;
 }
+
+// Re-export relationship and gift types
+export * from './relationship.types';
+export * from './gift.types';
