@@ -1,4 +1,5 @@
 // Live Stream Types for TikTok-style multi-participant streaming
+import SimplePeer from 'simple-peer';
 
 export type StreamStatus = 'idle' | 'starting' | 'live' | 'ended' | 'error';
 export type ParticipantRole = 'host' | 'participant';
@@ -43,7 +44,7 @@ export interface StreamLayoutState {
 export interface PeerConnection {
   peer_id: string;
   user_id: string;
-  peer: any; // SimplePeer instance
+  peer: SimplePeer.Instance; // SimplePeer instance
   stream?: MediaStream;
 }
 

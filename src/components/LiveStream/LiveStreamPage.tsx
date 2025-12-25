@@ -20,6 +20,8 @@ import { useWebRTC } from '../../hooks/useWebRTC';
 import { StreamParticipant } from '../../types/liveStream.types';
 
 // Mock user data - in real app, this would come from auth context
+// TODO: Replace with actual authentication system
+// SECURITY WARNING: Using Math.random() for IDs is not secure for production
 const CURRENT_USER = {
   id: 'user_' + Math.random().toString(36).substr(2, 9),
   username: 'Demo User',

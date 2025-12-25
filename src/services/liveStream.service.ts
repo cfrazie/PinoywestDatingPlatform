@@ -7,6 +7,7 @@ import {
   SignalingMessage,
   ChatMessage,
   LayoutType,
+  StreamStatus,
 } from '../types/liveStream.types';
 
 export class LiveStreamService {
@@ -44,7 +45,7 @@ export class LiveStreamService {
 
   async updateStreamStatus(
     streamId: string,
-    status: 'idle' | 'starting' | 'live' | 'ended' | 'error'
+    status: StreamStatus
   ): Promise<boolean> {
     if (!supabase) return false;
 

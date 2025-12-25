@@ -143,12 +143,18 @@ export class WebRTCService {
       
       // Replace track in all peer connections
       this.peers.forEach((peerConnection) => {
-        const sender = peerConnection.peer._pc
-          ?.getSenders()
-          .find((s: RTCRtpSender) => s.track?.kind === 'video');
-        
-        if (sender && newVideoTrack) {
-          sender.replaceTrack(newVideoTrack);
+        try {
+          // Access RTCPeerConnection through SimplePeer instance
+          const pc = (peerConnection.peer as any)._pc as RTCPeerConnection;
+          const sender = pc
+            ?.getSenders()
+            .find((s: RTCRtpSender) => s.track?.kind === 'video');
+          
+          if (sender && newVideoTrack) {
+            sender.replaceTrack(newVideoTrack);
+          }
+        } catch (error) {
+          console.error('Failed to replace track for peer:', error);
         }
       });
 
