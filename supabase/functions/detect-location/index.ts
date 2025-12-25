@@ -11,6 +11,142 @@ interface DetectRequest {
   ipAddress?: string;
 }
 
+interface LocationData {
+  country_name: string;
+  country_code: string;
+  country?: string;
+  city: string;
+  region: string;
+  region_code?: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  org?: string;
+}
+
+// Normalize response from different APIs to a common format
+function normalizeLocationData(data: any, provider: string): LocationData {
+  switch (provider) {
+    case 'ipapi':
+      // ipapi.co format
+      return {
+        country_name: data.country_name,
+        country_code: data.country || data.country_code,
+        city: data.city,
+        region: data.region,
+        region_code: data.region_code,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        timezone: data.timezone,
+        org: data.org || data.asn,
+      };
+    
+    case 'ip-api':
+      // ip-api.com format
+      return {
+        country_name: data.country,
+        country_code: data.countryCode,
+        city: data.city,
+        region: data.regionName,
+        region_code: data.region,
+        latitude: data.lat,
+        longitude: data.lon,
+        timezone: data.timezone,
+        org: data.org || data.isp,
+      };
+    
+    case 'ipwho':
+      // ipwho.is format
+      return {
+        country_name: data.country,
+        country_code: data.country_code,
+        city: data.city,
+        region: data.region,
+        region_code: data.region_code,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        timezone: data.timezone?.id || data.timezone,
+        org: data.connection?.org || data.connection?.isp,
+      };
+    
+    default:
+      return data;
+  }
+}
+
+// Try multiple IP geolocation APIs with fallback
+async function detectLocationWithFallback(ipAddress: string): Promise<LocationData> {
+  const apis = [
+    {
+      name: 'ipapi',
+      url: `https://ipapi.co/${ipAddress}/json/`,
+      headers: { 'User-Agent': 'PinoywestDatingPlatform/1.0' },
+    },
+    {
+      name: 'ip-api',
+      url: `http://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org`,
+      headers: {},
+    },
+    {
+      name: 'ipwho',
+      url: `https://ipwho.is/${ipAddress}`,
+      headers: {},
+    },
+  ];
+
+  // Try each API in order
+  for (const api of apis) {
+    try {
+      console.log(`Trying ${api.name} API...`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(api.url, {
+        headers: api.headers,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeout);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Check for API-specific error responses
+        if (api.name === 'ip-api' && data.status === 'fail') {
+          console.error(`${api.name} returned error:`, data.message);
+          continue;
+        }
+        
+        if (api.name === 'ipwho' && data.success === false) {
+          console.error(`${api.name} returned error:`, data.message);
+          continue;
+        }
+        
+        const normalized = normalizeLocationData(data, api.name);
+        console.log(`Successfully fetched location from ${api.name}`);
+        return normalized;
+      } else {
+        console.error(`${api.name} returned status ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`${api.name} error:`, error instanceof Error ? error.message : error);
+      // Continue to next API
+    }
+  }
+
+  // All APIs failed, return default Philippines location
+  console.log('All geolocation APIs failed, using default location');
+  return {
+    country_name: 'Philippines',
+    country_code: 'PH',
+    city: 'Manila',
+    region: 'Metro Manila',
+    latitude: 14.5995,
+    longitude: 120.9842,
+    timezone: 'Asia/Manila',
+  };
+}
+
 Deno.serve(async (req) => {
   try {
     // Handle CORS preflight
@@ -44,39 +180,8 @@ Deno.serve(async (req) => {
       req.headers.get('x-real-ip') ||
       'unknown';
 
-    // Call IP geolocation API (using ipapi.co as example)
-    let locationData;
-    try {
-      // In production, use a paid service with better accuracy
-      const geoResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
-      
-      if (geoResponse.ok) {
-        locationData = await geoResponse.json();
-      } else {
-        // Fallback to default location
-        locationData = {
-          country_name: 'Philippines',
-          country_code: 'PH',
-          city: 'Manila',
-          region: 'Metro Manila',
-          latitude: 14.5995,
-          longitude: 120.9842,
-          timezone: 'Asia/Manila',
-        };
-      }
-    } catch (error) {
-      console.error('IP geolocation error:', error);
-      // Use fallback data
-      locationData = {
-        country_name: 'Philippines',
-        country_code: 'PH',
-        city: 'Manila',
-        region: 'Metro Manila',
-        latitude: 14.5995,
-        longitude: 120.9842,
-        timezone: 'Asia/Manila',
-      };
-    }
+    // Try multiple APIs with automatic fallback
+    const locationData = await detectLocationWithFallback(ipAddress);
 
     // Insert IP location history
     await supabase

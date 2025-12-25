@@ -123,7 +123,13 @@ Fetches cultural guidelines from Wikipedia:
 
 **Endpoint**: `/functions/v1/detect-location`
 
-Detects user location from IP address:
+Detects user location from IP address with automatic fallback across multiple providers:
+
+**Features**:
+- Multi-provider fallback system (ipapi.co → ip-api.com → ipwho.is)
+- 5-second timeout per API attempt
+- Automatic normalization of different API response formats
+- Default Philippines location if all APIs fail
 
 **Request**:
 ```json
@@ -132,6 +138,30 @@ Detects user location from IP address:
   "ipAddress": "optional"
 }
 ```
+
+**Response**:
+```json
+{
+  "success": true,
+  "location": {
+    "country": "United States",
+    "country_code": "US",
+    "city": "Mountain View",
+    "region": "California",
+    "latitude": 37.386,
+    "longitude": -122.0838,
+    "timezone": "America/Los_Angeles",
+    "confidence": 0.85,
+    "has_existing_location": false,
+    "ip_address": "8.8.8.8"
+  }
+}
+```
+
+**Supported APIs**:
+1. **ipapi.co** - Primary (requires User-Agent header)
+2. **ip-api.com** - First fallback (free, no API key)
+3. **ipwho.is** - Second fallback (free, no API key)
 
 ## Services
 
@@ -318,10 +348,14 @@ All tables have RLS enabled with policies for:
 Add these to your `.env` file:
 
 ```env
-# IP Geolocation (choose one)
-VITE_IPAPI_KEY=your_key_here
-# or
-VITE_IP_API_KEY=your_key_here
+# IP Geolocation - No API keys required!
+# The edge function uses free APIs with automatic fallback:
+# 1. ipapi.co (primary, free tier 1000 req/day)
+# 2. ip-api.com (fallback, free unlimited for non-commercial)
+# 3. ipwho.is (second fallback, free unlimited)
+
+# For premium features (optional):
+# VITE_IPAPI_PRO_KEY=your_key_here  # For higher limits
 
 # Image Verification (optional but recommended)
 VITE_GOOGLE_VISION_KEY=your_key_here
