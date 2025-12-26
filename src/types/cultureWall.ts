@@ -144,6 +144,23 @@ export interface LocationDetectionResult {
   has_existing_location?: boolean;
 }
 
+export interface BlockedCountry {
+  id: string;
+  country_code: string;
+  country_name: string;
+  reason?: string;
+  blocked_at: string;
+  blocked_by?: string;
+  is_active: boolean;
+}
+
+export interface LocationBlockedError {
+  error: 'Access denied';
+  message: string;
+  country_code: string;
+  country_name: string;
+}
+
 // Verification Types
 export interface UserVerificationRequest {
   id: string;

@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import type {
   UserLocation,
   LocationDetectionResult,
+  LocationBlockedError,
 } from '../types/cultureWall';
 
 export const locationService = {
@@ -10,6 +11,12 @@ export const locationService = {
     const { data, error } = await supabase.functions.invoke('detect-location', {
       body: { userId, ipAddress },
     });
+
+    // Check if country is blocked (403 error)
+    if (error?.message?.includes('Access denied') || data?.error === 'Access denied') {
+      const blockedError = data as LocationBlockedError;
+      throw new Error(`Access denied: Service is not available in ${blockedError.country_name || 'your region'}`);
+    }
 
     if (error) throw error;
     return data.location;

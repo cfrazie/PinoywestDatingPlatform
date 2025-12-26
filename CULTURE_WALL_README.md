@@ -130,6 +130,20 @@ Detects user location from IP address with automatic fallback across multiple pr
 - 5-second timeout per API attempt
 - Automatic normalization of different API response formats
 - Default Philippines location if all APIs fail
+- **Geo-restriction enforcement** - Blocks access from specified countries
+
+**Blocked Countries**:
+The following countries are blocked by default for security and compliance:
+- 🇨🇳 China (CN)
+- 🇷🇺 Russia (RU)
+- 🇺🇦 Ukraine (UA)
+- 🇳🇬 Nigeria (NG)
+- 🇷🇴 Romania (RO)
+- 🇮🇳 India (IN)
+- 🇰🇵 North Korea (KP)
+- 🇲🇦 Morocco (MA)
+
+Blocked countries can be managed via the `blocked_countries` table.
 
 **Request**:
 ```json
@@ -157,6 +171,17 @@ Detects user location from IP address with automatic fallback across multiple pr
   }
 }
 ```
+
+**Error Response (Blocked Country)**:
+```json
+{
+  "error": "Access denied",
+  "message": "Service is not available in your region",
+  "country_code": "CN",
+  "country_name": "China"
+}
+```
+*HTTP Status: 403 Forbidden*
 
 **Supported APIs**:
 1. **ipapi.co** - Primary (requires User-Agent header)
@@ -396,6 +421,42 @@ Implement rate limiting for:
 - Comments: 30 comments per hour
 - Reactions: 100 per hour
 - Reports: 5 per hour
+
+### Geo-Restriction Management
+
+The system includes country-level blocking for security and compliance. Blocked countries are managed via the `blocked_countries` table.
+
+**Add a blocked country:**
+```sql
+INSERT INTO blocked_countries (country_code, country_name, reason, is_active)
+VALUES ('XX', 'Country Name', 'Security policy', true);
+```
+
+**Remove a country from blocked list:**
+```sql
+UPDATE blocked_countries
+SET is_active = false
+WHERE country_code = 'XX';
+```
+
+**View all blocked countries:**
+```sql
+SELECT country_code, country_name, reason, blocked_at
+FROM blocked_countries
+WHERE is_active = true;
+```
+
+**Default blocked countries:**
+- China (CN)
+- Russia (RU)
+- Ukraine (UA)
+- Nigeria (NG)
+- Romania (RO)
+- India (IN)
+- North Korea (KP)
+- Morocco (MA)
+
+Access attempts from blocked countries are logged in `ip_location_history` but do not create user location records.
 
 ## Future Enhancements
 

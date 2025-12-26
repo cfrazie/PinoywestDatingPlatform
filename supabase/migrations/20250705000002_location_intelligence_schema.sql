@@ -235,3 +235,56 @@ CREATE TRIGGER ensure_primary_location_unique
   FOR EACH ROW
   WHEN (NEW.is_primary = true)
   EXECUTE FUNCTION ensure_single_primary_location();
+
+-- Blocked countries table for geo-restrictions
+CREATE TABLE IF NOT EXISTS blocked_countries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  country_code TEXT UNIQUE NOT NULL, -- ISO 3166-1 alpha-2
+  country_name TEXT NOT NULL,
+  reason TEXT,
+  blocked_at TIMESTAMPTZ DEFAULT NOW(),
+  blocked_by UUID REFERENCES auth.users(id),
+  is_active BOOLEAN DEFAULT true
+);
+
+CREATE INDEX idx_blocked_countries_code ON blocked_countries(country_code, is_active);
+
+-- Enable RLS on blocked_countries
+ALTER TABLE blocked_countries ENABLE ROW LEVEL SECURITY;
+
+-- Policy for blocked_countries (readable by all, writable by admins only)
+CREATE POLICY "Blocked countries are viewable by everyone"
+  ON blocked_countries FOR SELECT
+  USING (true);
+
+-- Insert default blocked countries
+INSERT INTO blocked_countries (country_code, country_name, reason, is_active) VALUES
+('CN', 'China', 'Geo-restriction policy', true),
+('RU', 'Russia', 'Geo-restriction policy', true),
+('UA', 'Ukraine', 'Geo-restriction policy', true),
+('NG', 'Nigeria', 'Geo-restriction policy', true),
+('RO', 'Romania', 'Geo-restriction policy', true),
+('IN', 'India', 'Geo-restriction policy', true),
+('KP', 'North Korea', 'Geo-restriction policy', true),
+('MA', 'Morocco', 'Geo-restriction policy', true)
+ON CONFLICT (country_code) DO NOTHING;
+
+-- Function to check if country is blocked
+CREATE OR REPLACE FUNCTION is_country_blocked(
+  p_country_code TEXT
+) RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_blocked BOOLEAN;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1 FROM blocked_countries
+    WHERE country_code = p_country_code
+    AND is_active = true
+  ) INTO v_blocked;
+  
+  RETURN v_blocked;
+END;
+$$;

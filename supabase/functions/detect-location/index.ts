@@ -183,6 +183,42 @@ Deno.serve(async (req) => {
     // Try multiple APIs with automatic fallback
     const locationData = await detectLocationWithFallback(ipAddress);
 
+    // Check if country is blocked using database
+    const { data: blockedCheck } = await supabase.rpc('is_country_blocked', {
+      p_country_code: locationData.country_code
+    });
+
+    if (blockedCheck === true) {
+      // Log the blocked access attempt
+      await supabase
+        .from('ip_location_history')
+        .insert({
+          user_id: userId,
+          ip_address: ipAddress,
+          country: locationData.country_name,
+          country_code: locationData.country_code,
+          region: locationData.region,
+          city: locationData.city,
+          latitude: locationData.latitude,
+          longitude: locationData.longitude,
+          timezone: locationData.timezone,
+          isp: locationData.org || null,
+        });
+
+      return new Response(JSON.stringify({
+        error: 'Access denied',
+        message: 'Service is not available in your region',
+        country_code: locationData.country_code,
+        country_name: locationData.country_name,
+      }), {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
     // Insert IP location history
     await supabase
       .from('ip_location_history')
