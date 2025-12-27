@@ -5,12 +5,6 @@ import { ApiResponse } from '../types';
 // Contact form submission
 export const submitContactForm = async (data: ContactFormData): Promise<ApiResponse<any>> => {
   try {
-    if (!supabase) {
-      // Simulate successful submission for demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { message: 'Thank you for your message! We\'ll get back to you soon.' };
-    }
-
     const { error } = await supabase
       .from('contact_submissions')
       .insert({
@@ -36,12 +30,6 @@ export const submitContactForm = async (data: ContactFormData): Promise<ApiRespo
 // Newsletter subscription
 export const subscribeToNewsletter = async (data: NewsletterData): Promise<ApiResponse<any>> => {
   try {
-    if (!supabase) {
-      // Simulate successful subscription for demo
-      await new Promise(resolve => setTimeout(resolve, 800));
-      return { message: 'Successfully subscribed to our newsletter!' };
-    }
-
     // Check if email already exists
     const { data: existing } = await supabase
       .from('newsletter_subscriptions')
@@ -75,17 +63,19 @@ export const subscribeToNewsletter = async (data: NewsletterData): Promise<ApiRe
 // Analytics tracking
 export const trackEvent = async (eventType: string, eventData?: any): Promise<void> => {
   try {
-    if (!supabase) {
-      // Log to console for demo
+    // Log to console in development
+    if (import.meta.env.DEV) {
       console.log('Analytics event:', eventType, eventData);
-      return;
     }
+
+    // Get current user session
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id || null;
 
     await supabase
       .from('analytics_events')
       .insert({
-        user_id: auth.uid() || null,
-        user_id: auth.uid() || null,
+        user_id: userId,
         event_type: eventType,
         event_data: eventData,
         user_agent: navigator.userAgent,
