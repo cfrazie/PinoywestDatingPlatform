@@ -39,10 +39,13 @@ jobs:
       - name: Type check
         id: typecheck
         run: |
-          if npm run typecheck --if-present 2>/dev/null; then
+          if npm run typecheck --if-present; then
             echo "status=✅ Passed" >> $GITHUB_OUTPUT
-          elif npx tsc --noEmit 2>/dev/null; then
+          elif [ -f "tsconfig.json" ] && npx tsc --noEmit; then
             echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          elif [ -f "tsconfig.json" ]; then
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            exit 1
           else
             echo "Type checking not configured"
             echo "status=⏭️ Skipped" >> $GITHUB_OUTPUT
@@ -59,14 +62,28 @@ jobs:
       - name: Run tests with coverage
         id: test
         run: |
-          if npm run test --if-present -- --coverage --run 2>/dev/null; then
+          # Try running tests with vitest (--run flag)
+          if npm run test --if-present -- --coverage --run; then
             echo "status=✅ Passed" >> $GITHUB_OUTPUT
-          elif npm run test --if-present -- --coverage 2>/dev/null; then
-            echo "status=✅ Passed" >> $GITHUB_OUTPUT
-          else
-            echo "Tests not configured or failed"
-            echo "status=⏭️ Skipped" >> $GITHUB_OUTPUT
+            exit 0
           fi
+          
+          # If vitest fails, try without --run flag (for Jest or other runners)
+          if npm run test --if-present -- --coverage; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check if test script exists
+          if ! grep -q '"test"' package.json; then
+            echo "Tests not configured"
+            echo "status=⏭️ Skipped" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Tests exist but failed
+          echo "status=❌ Failed" >> $GITHUB_OUTPUT
+          exit 1
 
       - name: Upload coverage reports
         if: always() && hashFiles('coverage/**') != ''
@@ -81,12 +98,18 @@ jobs:
         id: audit
         run: |
           npm audit --json > audit-results.json || true
-          npm audit || true
-          if [ -f audit-results.json ]; then
+          
+          if [ -f audit-results.json ] && [ -s audit-results.json ]; then
             echo "Audit completed - see artifacts for details"
+            
+            # Display vulnerabilities using jq if available, otherwise show raw audit
             if command -v jq &> /dev/null; then
-              jq '.vulnerabilities' audit-results.json || true
+              echo "Vulnerability Summary:"
+              jq '.vulnerabilities' audit-results.json || cat audit-results.json
+            else
+              npm audit || true
             fi
+            
             echo "status=⚠️ Review Required" >> $GITHUB_OUTPUT
           else
             echo "status=✅ No Issues" >> $GITHUB_OUTPUT
