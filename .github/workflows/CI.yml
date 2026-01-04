@@ -63,19 +63,19 @@ jobs:
         id: test
         run: |
           # Try running tests with vitest (--run flag)
-          if npm run test --if-present -- --coverage --run; then
+          if npm test -- --coverage --run 2>/dev/null; then
             echo "status=✅ Passed" >> $GITHUB_OUTPUT
             exit 0
           fi
           
           # If vitest fails, try without --run flag (for Jest or other runners)
-          if npm run test --if-present -- --coverage; then
+          if npm test -- --coverage 2>/dev/null; then
             echo "status=✅ Passed" >> $GITHUB_OUTPUT
             exit 0
           fi
           
-          # Check if test script exists
-          if ! grep -q '"test"' package.json; then
+          # Check if test script exists in package.json
+          if ! grep -qE '\"test\"\s*:' package.json; then
             echo "Tests not configured"
             echo "status=⏭️ Skipped" >> $GITHUB_OUTPUT
             exit 0
@@ -97,16 +97,23 @@ jobs:
       - name: Security audit
         id: audit
         run: |
-          npm audit --json > audit-results.json || true
+          # Run audit and save results
+          if npm audit --json > audit-results.json 2>/dev/null; then
+            audit_exit_code=0
+          else
+            audit_exit_code=$?
+          fi
           
+          # Check if we have valid results
           if [ -f audit-results.json ] && [ -s audit-results.json ]; then
             echo "Audit completed - see artifacts for details"
             
-            # Display vulnerabilities using jq if available, otherwise show raw audit
-            if command -v jq &> /dev/null; then
+            # Display vulnerabilities using jq if available
+            if command -v jq &> /dev/null && jq empty audit-results.json 2>/dev/null; then
               echo "Vulnerability Summary:"
-              jq '.vulnerabilities' audit-results.json || cat audit-results.json
+              jq '.vulnerabilities' audit-results.json 2>/dev/null || echo "Unable to parse vulnerability details"
             else
+              echo "Note: Install jq for better formatted results"
               npm audit || true
             fi
             
