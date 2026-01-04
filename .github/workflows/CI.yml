@@ -15,6 +15,9 @@ jobs:
   ci:
     name: Build, Lint, Type Check, Test & Security Audit
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
