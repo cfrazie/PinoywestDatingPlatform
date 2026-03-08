@@ -1,0 +1,4 @@
+git add .
+git commit -m "Initial commit with CI/CD setup"
+git push -u origin main
+
