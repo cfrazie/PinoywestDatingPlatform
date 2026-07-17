@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Prevent redundant workflow runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Build, Lint, Type Check, Test & Security Audit
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        id: lint
+        run: |
+          npm run lint --if-present
+          echo "status=✅ Passed" >> $GITHUB_OUTPUT
+        continue-on-error: false
+
+      - name: Type check
+        id: typecheck
+        run: |
+          if npm run typecheck --if-present; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          elif [ -f "tsconfig.json" ] && npx tsc --noEmit; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          elif [ -f "tsconfig.json" ]; then
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "Type checking not configured"
+            echo "status=⏭️ Skipped" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: false
+
+      - name: Build
+        id: build
+        run: |
+          npm run build --if-present
+          echo "status=✅ Passed" >> $GITHUB_OUTPUT
+        continue-on-error: false
+
+      - name: Run tests with coverage
+        id: test
+        run: |
+          # Try running tests with vitest (--run flag)
+          if npm test -- --coverage --run 2>/dev/null; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # If vitest fails, try without --run flag (for Jest or other runners)
+          if npm test -- --coverage 2>/dev/null; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check if test script exists in package.json
+          if ! grep -qE '\"test\"\s*:' package.json; then
+            echo "Tests not configured"
+            echo "status=⏭️ Skipped" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Tests exist but failed
+          echo "status=❌ Failed" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Upload coverage reports
+        if: always() && hashFiles('coverage/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Security audit
+        id: audit
+        run: |
+          # Run audit and save results
+          if npm audit --json > audit-results.json 2>/dev/null; then
+            audit_exit_code=0
+          else
+            audit_exit_code=$?
+          fi
+          
+          # Check if we have valid results
+          if [ -f audit-results.json ] && [ -s audit-results.json ]; then
+            echo "Audit completed - see artifacts for details"
+            
+            # Display vulnerabilities using jq if available
+            if command -v jq &> /dev/null && jq empty audit-results.json 2>/dev/null; then
+              echo "Vulnerability Summary:"
+              jq '.vulnerabilities' audit-results.json 2>/dev/null || echo "Unable to parse vulnerability details"
+            else
+              echo "Note: Install jq for better formatted results"
+              npm audit || true
+            fi
+            
+            echo "status=⚠️ Review Required" >> $GITHUB_OUTPUT
+          else
+            echo "status=✅ No Issues" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Upload security audit results
+        if: always() && hashFiles('audit-results.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit
+          path: audit-results.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "## 🚀 CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 Lint | ${{ steps.lint.outputs.status || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📘 Type Check | ${{ steps.typecheck.outputs.status || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️ Build | ${{ steps.build.outputs.status || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Tests | ${{ steps.test.outputs.status || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔒 Security Audit | ${{ steps.audit.outputs.status || '⏭️ Skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -d "coverage" ] || [ -f "audit-results.json" ]; then
+            echo "### 📊 Artifacts" >> $GITHUB_STEP_SUMMARY
+            [ -d "coverage" ] && echo "- ✅ Coverage reports available for download" >> $GITHUB_STEP_SUMMARY
+            [ -f "audit-results.json" ] && echo "- ✅ Security audit results available for review" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "**Workflow:** \`${{ github.workflow }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
