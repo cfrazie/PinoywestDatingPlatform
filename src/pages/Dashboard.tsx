@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { 
   User, Settings, CreditCard, Heart, MessageCircle, 
   Bell, LogOut, Shield, Calendar, ChevronRight, Edit,
-  Camera, CheckCircle, Clock, AlertTriangle, MapPin
+  Camera, CheckCircle, Clock, AlertTriangle, MapPin,
+  Mail, RefreshCw
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
 import { supabase } from '../lib/supabase';
@@ -18,6 +19,10 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, boolean>>({});
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
   
   const navigate = useNavigate();
   
@@ -69,7 +74,15 @@ const Dashboard: React.FC = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          navigate('/');
+          navigate('/sign-in', { state: { from: '/dashboard' } });
+          return;
+        }
+
+        // Enforce email verification
+        setUserEmail(session.user.email ?? null);
+        if (!session.user.email_confirmed_at) {
+          setEmailVerified(false);
+          setIsLoading(false);
           return;
         }
         
@@ -123,9 +136,28 @@ const Dashboard: React.FC = () => {
     
     try {
       await supabase.auth.signOut();
-      navigate('/');
+      navigate('/sign-in');
     } catch (err) {
       console.error('Error signing out:', err);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!supabase || !userEmail || resendCooldown > 0) return;
+    setResendLoading(true);
+    try {
+      await supabase.auth.resend({ type: 'signup', email: userEmail });
+      setResendCooldown(60);
+      const timer = setInterval(() => {
+        setResendCooldown(c => {
+          if (c <= 1) { clearInterval(timer); return 0; }
+          return c - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      console.error('Resend error:', err);
+    } finally {
+      setResendLoading(false);
     }
   };
   
@@ -194,6 +226,65 @@ const Dashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!emailVerified) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center"
+        >
+          <div className="mx-auto mb-4 flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full">
+            <Mail className="w-8 h-8 text-yellow-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h2>
+          <p className="text-gray-600 mb-2">
+            You must verify your email address before you can access your dashboard.
+          </p>
+          {userEmail && (
+            <p className="text-gray-500 text-sm mb-4">
+              We sent a verification link to <strong>{userEmail}</strong>.
+              Check your inbox (and spam folder).
+            </p>
+          )}
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resendCooldown > 0 || resendLoading}
+              className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {resendLoading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Sending…
+                </>
+              ) : resendCooldown > 0 ? (
+                <>
+                  <Clock className="w-4 h-4 mr-2" />
+                  Resend in {resendCooldown}s
+                </>
+              ) : (
+                <>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Resend Verification Email
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </button>
+          </div>
+        </motion.div>
       </div>
     );
   }

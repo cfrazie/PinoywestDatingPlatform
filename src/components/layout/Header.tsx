@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Menu, X, User, LogIn, ChevronDown, Phone, Mail } from 'lucide-react';
 import Button from '../ui/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
 const Header: React.FC = () => {
@@ -10,6 +10,7 @@ const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,25 +82,12 @@ const Header: React.FC = () => {
   };
 
   const handleGetStarted = () => {
-    // First scroll to pricing, then show signup intent
-    const pricingSection = document.getElementById('pricing');
-    if (pricingSection) {
-      pricingSection.scrollIntoView({ behavior: 'smooth' });
-      
-      // After scrolling, show a message about getting started
-      setTimeout(() => {
-        const confirmed = confirm(
-          'Welcome to PinoyWest! 🌟\n\n' +
-          'You can choose a plan below, or would you like to start with our free Basic plan?\n\n' +
-          'Click OK to begin with the free plan, or Cancel to choose a different plan.'
-        );
-        
-        if (confirmed) {
-          console.log('User selected free Basic plan');
-          alert('🎉 Great choice! You\'re starting with our free Basic plan. In a real app, this would create your account!');
-        }
-      }, 1000);
-    }
+    navigate('/sign-in');
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleJoinNow = () => {
+    navigate('/sign-up');
     setIsMobileMenuOpen(false);
   };
 
@@ -224,7 +212,7 @@ const Header: React.FC = () => {
                   </Button>
                   <Button 
                     variant="primary"
-                    onClick={handleGetStarted}
+                    onClick={handleJoinNow}
                   >
                     <User className="w-4 h-4 mr-2" />
                     Join Now
@@ -325,7 +313,7 @@ const Header: React.FC = () => {
                 <Button 
                   variant="primary" 
                   className="w-full"
-                  onClick={handleGetStarted}
+                  onClick={handleJoinNow}
                 >
                   <User className="w-4 h-4 mr-2" />
                   Join Now
