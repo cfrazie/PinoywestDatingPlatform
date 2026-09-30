@@ -75,17 +75,14 @@ export const subscribeToNewsletter = async (data: NewsletterData): Promise<ApiRe
 // Analytics tracking
 export const trackEvent = async (eventType: string, eventData?: any): Promise<void> => {
   try {
-    if (!supabase) {
-      // Log to console for demo
-      console.log('Analytics event:', eventType, eventData);
-      return;
-    }
+    // Get current user's id using supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id || null;
 
     await supabase
       .from('analytics_events')
       .insert({
-        user_id: auth.uid() || null,
-        user_id: auth.uid() || null,
+        user_id: userId,
         event_type: eventType,
         event_data: eventData,
         user_agent: navigator.userAgent,

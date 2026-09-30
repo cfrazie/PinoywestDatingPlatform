@@ -3,14 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Fail-fast approach: throw an error during startup if Supabase is not configured.
+// This prevents runtime TypeErrors when code assumes a non-null Supabase client.
+// To configure Supabase, set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables not configured. Some features may not work.');
-  console.log('To configure Supabase, visit: http://localhost:5173/#admin');
+  throw new Error(
+    'Supabase configuration missing: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set in environment variables. ' +
+    'Please check your .env file or environment configuration.'
+  );
 }
 
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Database types
 export interface Database {
