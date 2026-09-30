@@ -25,9 +25,11 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Focus styles */
-*:focus {
-  outline: none;
+/* Focus styles - Accessible focus indicators for keyboard users */
+/* Using :focus-visible to show outline only for keyboard navigation */
+*:focus-visible {
+  outline: 3px solid rgba(102, 126, 234, 0.6);
+  outline-offset: 2px;
 }
 
 /* Custom utilities */

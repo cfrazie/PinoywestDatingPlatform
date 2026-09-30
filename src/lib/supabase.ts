@@ -3,14 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Fail-fast: Throw error if environment variables are missing to prevent runtime TypeErrors
+// This ensures code that assumes supabase is not null will fail early with a clear message
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables not configured. Some features may not work.');
-  console.log('To configure Supabase, visit: http://localhost:5173/#admin');
+  const missing = [];
+  if (!supabaseUrl) missing.push('VITE_SUPABASE_URL');
+  if (!supabaseAnonKey) missing.push('VITE_SUPABASE_ANON_KEY');
+  throw new Error(`Missing Supabase env vars: ${missing.join(', ')} ${missing.length > 1 ? 'are' : 'is'} required.`);
 }
 
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Database types
 export interface Database {
