@@ -81,11 +81,12 @@ export const trackEvent = async (eventType: string, eventData?: any): Promise<vo
       return;
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+    
     await supabase
       .from('analytics_events')
       .insert({
-        user_id: auth.uid() || null,
-        user_id: auth.uid() || null,
+        user_id: session?.user?.id || null,
         event_type: eventType,
         event_data: eventData,
         user_agent: navigator.userAgent,
