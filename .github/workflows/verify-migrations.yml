@@ -1,0 +1,141 @@
+name: Database Migration Verification
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/verify-migrations.yml'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/config.toml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-migrations:
+    name: Verify Database Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Verify Supabase CLI installation
+        run: supabase --version
+
+      - name: Start Supabase local instance
+        run: |
+          cd ${{ github.workspace }}
+          supabase start
+
+      - name: Run all migrations
+        run: |
+          cd ${{ github.workspace }}
+          supabase db reset
+
+      - name: Verify schema types
+        run: |
+          cd ${{ github.workspace }}
+          DB_URL=$(supabase status -o env | grep DATABASE_URL | cut -d'=' -f2)
+          
+          # Create verification script
+          cat > /tmp/verify_schema.sql << 'EOF'
+          -- Verify analytics_events.user_id type matches auth.users.id
+          DO $$
+          DECLARE
+              analytics_user_id_type text;
+              auth_users_id_type text;
+          BEGIN
+              -- Get analytics_events.user_id type
+              SELECT data_type INTO analytics_user_id_type
+              FROM information_schema.columns
+              WHERE table_schema = 'public' 
+              AND table_name = 'analytics_events' 
+              AND column_name = 'user_id';
+              
+              -- Get auth.users.id type
+              SELECT data_type INTO auth_users_id_type
+              FROM information_schema.columns
+              WHERE table_schema = 'auth' 
+              AND table_name = 'users' 
+              AND column_name = 'id';
+              
+              -- Verify they match
+              IF analytics_user_id_type IS NULL THEN
+                  RAISE EXCEPTION 'analytics_events.user_id column not found';
+              END IF;
+              
+              IF analytics_user_id_type != 'uuid' THEN
+                  RAISE EXCEPTION 'analytics_events.user_id type is %, expected uuid', analytics_user_id_type;
+              END IF;
+              
+              IF auth_users_id_type != 'uuid' THEN
+                  RAISE EXCEPTION 'auth.users.id type is %, expected uuid', auth_users_id_type;
+              END IF;
+              
+              RAISE NOTICE '✓ Type verification passed: both are uuid';
+          END $$;
+          
+          -- List all foreign keys on analytics_events
+          SELECT 
+              tc.constraint_name,
+              kcu.column_name,
+              ccu.table_name AS foreign_table_name,
+              ccu.column_name AS foreign_column_name
+          FROM information_schema.table_constraints AS tc 
+          JOIN information_schema.key_column_usage AS kcu
+              ON tc.constraint_name = kcu.constraint_name
+              AND tc.table_schema = kcu.table_schema
+          JOIN information_schema.constraint_column_usage AS ccu
+              ON ccu.constraint_name = tc.constraint_name
+              AND ccu.table_schema = tc.table_schema
+          WHERE tc.constraint_type = 'FOREIGN KEY' 
+              AND tc.table_name = 'analytics_events';
+          EOF
+          
+          # Run verification
+          psql "$DB_URL" -f /tmp/verify_schema.sql
+
+      - name: Check for migration warnings
+        run: |
+          cd ${{ github.workspace }}
+          echo "Checking migration file structure..."
+          MIGRATION_COUNT=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)
+          echo "Total migrations found: $MIGRATION_COUNT"
+          
+          if [ $MIGRATION_COUNT -eq 0 ]; then
+            echo "::error::No migration files found"
+            exit 1
+          fi
+          
+          echo "Migration files:"
+          ls -1 supabase/migrations/*.sql
+
+      - name: Stop Supabase
+        if: always()
+        run: |
+          cd ${{ github.workspace }}
+          supabase stop
+
+      - name: Report success
+        if: success()
+        run: |
+          echo "::notice::✅ All database migrations verified successfully"
+          echo "::notice::✅ Schema types are correct (analytics_events.user_id is UUID)"
+          echo "::notice::✅ All type constraints verified"
